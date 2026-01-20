@@ -2,13 +2,12 @@
 
 extern class ThreadManager* GThreadManager;
 
-// class CoreGlobal
-// {
-// public:
-// 	CoreGlobal();
-// 	~CoreGlobal();
-// 
-// private:
-// 
-// } GCoreGlobal;
+class CoreGlobal
+{
+public:
+	CoreGlobal();
+	~CoreGlobal();
 
+private:
+
+} GCoreGlobal;

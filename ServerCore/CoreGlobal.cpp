@@ -4,15 +4,7 @@
 
 ThreadManager* GThreadManager = nullptr;
 
-class CoreGlobal
-{
-public:
-	CoreGlobal();
-	~CoreGlobal();
 
-private:
-
-} GCoreGlobal;
 
 CoreGlobal::CoreGlobal()
 {
