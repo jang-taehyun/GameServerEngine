@@ -82,3 +82,28 @@ private:
 	uint16 _writeCount;			// write lock을 재귀적으로 잡기 위해 write count를 따로 관리
 };
 
+
+
+/*----------------------------------
+	Lock Guard(Read-write Lock)
+----------------------------------*/
+
+class ReadLockGuard
+{
+public:
+	ReadLockGuard(Lock& lock);
+	~ReadLockGuard();
+
+private:
+	Lock& _lock;
+};
+
+class WriteLockGuard
+{
+public:
+	WriteLockGuard(Lock& lock);
+	~WriteLockGuard();
+
+private:
+	Lock& _lock;
+};

@@ -4,8 +4,6 @@
 
 ThreadManager* GThreadManager = nullptr;
 
-
-
 CoreGlobal::CoreGlobal()
 {
 	GThreadManager = new ThreadManager;

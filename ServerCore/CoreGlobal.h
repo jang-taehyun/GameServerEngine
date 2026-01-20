@@ -10,4 +10,6 @@ public:
 
 private:
 
-} GCoreGlobal;
+};
+
+extern CoreGlobal GCoreGlobal;
