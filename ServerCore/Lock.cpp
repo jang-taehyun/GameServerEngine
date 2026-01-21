@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Lock.h"
 #include "CoreTLS.h"
+#include "DeadLockProfiler.h"
 
 Lock::Lock() : _lockFlag(EMPTY_FLAG), _writeCount(0)
 {
@@ -10,8 +11,13 @@ Lock::~Lock()
 {
 }
 
-void Lock::WriteLock()
+void Lock::WriteLock(const char* name)
 {
+#ifdef _DEBUG
+	GDeadlockProfiler->PushLock(name);
+#endif // _DEBUG
+
+
 	// 동일한 쓰레드가 소유하고 있다면 무조건 성공
 	const uint32 lockThreadID = (_lockFlag.load() & WRITE_THREAD_MASK) >> 16;
 	if (lockThreadID == LThreadID)
@@ -45,8 +51,12 @@ void Lock::WriteLock()
 	}
 }
 
-void Lock::WriteUnlock()
+void Lock::WriteUnlock(const char* name)
 {
+#ifdef _DEBUG
+	GDeadlockProfiler->PopLock(name);
+#endif // _DEBUG
+
 	// Read Lock을 다 풀기 전에는 Write Unlock 불가능
 	if (0 != (_lockFlag.load() & READ_COUNT_MASK))
 		CRASH("INVALID_UNLOCK_ORDER");
@@ -57,8 +67,12 @@ void Lock::WriteUnlock()
 		_lockFlag.store(EMPTY_FLAG);
 }
 
-void Lock::ReadLock()
+void Lock::ReadLock(const char* name)
 {
+#ifdef _DEBUG
+	GDeadlockProfiler->PushLock(name);
+#endif // _DEBUG
+
 	// 동일한 쓰레드가 소유하고 있다면 무조건 성공
 	const uint32 lockThreadID = (_lockFlag.load() & WRITE_THREAD_MASK) >> 16;
 	if (lockThreadID == LThreadID)
@@ -89,8 +103,12 @@ void Lock::ReadLock()
 	}
 }
 
-void Lock::ReadUnlock()
+void Lock::ReadUnlock(const char* name)
 {
+#ifdef _DEBUG
+	GDeadlockProfiler->PopLock(name);
+#endif // _DEBUG
+
 	if (0 == _lockFlag.fetch_sub(1))
 		CRASH("MULTIPLE_READ_UNLOCK");
 }
@@ -100,22 +118,22 @@ void Lock::ReadUnlock()
 	Lock Guard(Read-write Lock)
 ----------------------------------*/
 
-ReadLockGuard::ReadLockGuard(Lock& lock) : _lock(lock)
+ReadLockGuard::ReadLockGuard(Lock& lock, const char* name) : _lock(lock), _name(name)
 {
-	_lock.ReadLock();
+	_lock.ReadLock(name);
 }
 
 ReadLockGuard::~ReadLockGuard()
 {
-	_lock.ReadUnlock();
+	_lock.ReadUnlock(_name);
 }
 
-WriteLockGuard::WriteLockGuard(Lock& lock) : _lock(lock)
+WriteLockGuard::WriteLockGuard(Lock& lock, const char* name) : _lock(lock), _name(name)
 {
-	_lock.WriteLock();
+	_lock.WriteLock(name);
 }
 
 WriteLockGuard::~WriteLockGuard()
 {
-	_lock.WriteUnlock();
+	_lock.WriteUnlock(_name);
 }
