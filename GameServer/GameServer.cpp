@@ -8,43 +8,76 @@
 #include <thread>
 #include <chrono>
 
-#include "ThreadManager.h"
+#include "RefCounting.h"
 
-#include "AccountManager.h"
-#include "PlayerManager.h"
+class Wraight : public RefCountable
+{
+public:
+    int _hp = 150;
+    int _posX = 0;
+    int _posY = 0;
+};
 
-using std::operator""ms;
+using WraightRef = TSharedPtr<Wraight>;
+class Missile : public RefCountable
+{
+public:
+    void SetTarget(WraightRef target)
+    {
+        _target = target;
+    }
+
+    bool Update()
+    {
+        if (_target == nullptr)
+            return false;
+
+        int posX = _target->_posX;
+        int posY = _target->_posY;
+
+
+        // TODO: 쫓아간다
+
+
+        if (0 == _target->_hp)
+        {
+            _target->ReleaseRef();
+            _target = nullptr;
+            return false;
+        }
+
+        return true;
+    }
+
+private:
+    WraightRef _target = nullptr;
+};
+
+using MissileRef = TSharedPtr<Missile>;
 
 int main()
 {
-    using std::cout;
-    using std::endl;
+    WraightRef wraight(new Wraight);
+    wraight->ReleaseRef();
+    MissileRef missile(new Missile);
+    missile->ReleaseRef();
+    missile->SetTarget(wraight);
 
-    GThreadManager->Launch(
-        [=]()
+    // 레이스가 피격 당함
+    wraight->_hp = 0;
+    wraight = nullptr;
+
+    while (true)
+    {
+        if (missile != nullptr)
         {
-            while (true)
+            if (false == missile->Update())
             {
-                cout << "Player then Account" << endl;
-                GPlayerManager.PlayerThenAccount();
-                std::this_thread::sleep_for(100ms);
+                missile = nullptr;
+                break;
             }
         }
-    );
-
-    GThreadManager->Launch(
-        [=]()
-        {
-            while (true)
-            {
-                cout << "Account then Player" << endl;
-                GAccountManager.AccountThenPlayer();
-                std::this_thread::sleep_for(100ms);
-            }
-        }
-    );
-
-    GThreadManager->Join();
+    }
 
     return 0;
 }
