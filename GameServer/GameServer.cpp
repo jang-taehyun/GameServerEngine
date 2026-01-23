@@ -8,76 +8,49 @@
 #include <thread>
 #include <chrono>
 
-#include "RefCounting.h"
+#include "Memory.h"
 
-class Wraight : public RefCountable
+class Knight
 {
 public:
-    int _hp = 150;
-    int _posX = 0;
-    int _posY = 0;
-};
+    Knight() { std::cout << "Knight()" << std::endl; }
+    ~Knight() { std::cout << "~Knight()" << std::endl; }
 
-using WraightRef = TSharedPtr<Wraight>;
-class Missile : public RefCountable
-{
-public:
-    void SetTarget(WraightRef target)
-    {
-        _target = target;
-    }
-
-    bool Update()
-    {
-        if (_target == nullptr)
-            return false;
-
-        int posX = _target->_posX;
-        int posY = _target->_posY;
-
-
-        // TODO: 쫓아간다
-
-
-        if (0 == _target->_hp)
-        {
-            _target->ReleaseRef();
-            _target = nullptr;
-            return false;
-        }
-
-        return true;
-    }
+    // void* operator new(size_t size)
+    // {
+    //     std::cout << "operator new " << size << std::endl;
+    //     void* ptr = ::malloc(size);
+    //     return ptr;
+    // }
+    // 
+    // void operator delete(void* ptr)
+    // {
+    //     std::cout << "operator delete" << std::endl;
+    //     ::free(ptr);
+    // }
 
 private:
-    WraightRef _target = nullptr;
+    int32 _hp;
+    int32 _tmp;
 };
 
-using MissileRef = TSharedPtr<Missile>;
+// void* operator new(size_t size)
+// {
+//     std::cout << "operator new " << size << std::endl;
+//     void* ptr = ::malloc(size);
+//     return ptr;
+// }
+// 
+// void operator delete(void* ptr)
+// {
+//     std::cout << "operator delete" << std::endl;
+//     ::free(ptr);
+// }
 
 int main()
 {
-    WraightRef wraight(new Wraight);
-    wraight->ReleaseRef();
-    MissileRef missile(new Missile);
-    missile->ReleaseRef();
-    missile->SetTarget(wraight);
-
-    // 레이스가 피격 당함
-    wraight->_hp = 0;
-    wraight = nullptr;
-
-    while (true)
-    {
-        if (missile != nullptr)
-        {
-            if (false == missile->Update())
-            {
-                missile = nullptr;
-                break;
-            }
-        }
-    }
+    Knight* knight = Memory::xnew<Knight>();
+    Memory::xdelete(knight);
 
     return 0;
 }
