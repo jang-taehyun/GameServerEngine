@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Types.h"
-#include "Allocator.h"
 
 /*------------
 	 Lock
@@ -20,16 +19,13 @@
 ------------*/
 
 // allocator(ÇÒ´ç±â) //
-namespace Memory
-{
 #ifdef _DEBUG
-#define xalloc(size)	Memory::BaseAllocator::Alloc(size)
-#define xrelease(ptr)	Memory::BaseAllocator::Release(ptr)
+#define xxalloc(size)	StompAllocator::Alloc(size)
+#define xxrelease(ptr)	StompAllocator::Release(ptr)
 #else 
-#define xalloc(size)	Memory::BaseAllocator::Alloc(size)
-#define xrelease(ptr)	Memory::BaseAllocator::Release(ptr)
+#define xxalloc(size)	BaseAllocator::Alloc(size)
+#define xxrelease(ptr)	BaseAllocator::Release(ptr)
 #endif
-}
 
 /*------------
 	Crash

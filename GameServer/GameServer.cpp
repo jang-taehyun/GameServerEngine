@@ -13,44 +13,19 @@
 class Knight
 {
 public:
-    Knight() { std::cout << "Knight()" << std::endl; }
+    Knight() : _hp(0), _tmp(1) { std::cout << "Knight()" << std::endl; }
     ~Knight() { std::cout << "~Knight()" << std::endl; }
 
-    // void* operator new(size_t size)
-    // {
-    //     std::cout << "operator new " << size << std::endl;
-    //     void* ptr = ::malloc(size);
-    //     return ptr;
-    // }
-    // 
-    // void operator delete(void* ptr)
-    // {
-    //     std::cout << "operator delete" << std::endl;
-    //     ::free(ptr);
-    // }
-
-private:
     int32 _hp;
     int32 _tmp;
 };
 
-// void* operator new(size_t size)
-// {
-//     std::cout << "operator new " << size << std::endl;
-//     void* ptr = ::malloc(size);
-//     return ptr;
-// }
-// 
-// void operator delete(void* ptr)
-// {
-//     std::cout << "operator delete" << std::endl;
-//     ::free(ptr);
-// }
-
 int main()
 {
-    Knight* knight = Memory::xnew<Knight>();
-    Memory::xdelete(knight);
+    Knight* knight = xnew<Knight>();
+    xdelete(knight);
+
+    knight->_hp = 200;
 
     return 0;
 }

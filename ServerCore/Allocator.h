@@ -10,12 +10,23 @@
 ----------------------*/
 
 // 기본적으로 사용할 할당자 //
-namespace Memory
+class BaseAllocator
 {
-	class BaseAllocator
-	{
-	public:
-		static void* Alloc(int32 size);
-		static void Release(void* ptr);
-	};
-}
+public:
+	static void* Alloc(int32 size);
+	static void Release(void* ptr);
+};
+
+
+/*----------------------
+	 StompAllocator
+----------------------*/
+
+class StompAllocator
+{
+	enum { PAGE_SIZE = 0x1000 };
+
+public:
+	static void* Alloc(int32 size);
+	static void Release(void* ptr);
+};
