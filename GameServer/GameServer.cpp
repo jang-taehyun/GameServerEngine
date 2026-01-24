@@ -8,24 +8,27 @@
 #include <thread>
 #include <chrono>
 
-#include "Memory.h"
+#include "Allocator.h"
 
 class Knight
 {
 public:
-    Knight() : _hp(0), _tmp(1) { std::cout << "Knight()" << std::endl; }
+    Knight() : _hp(100), _mp(10) { std::cout << "Knight()" << std::endl; }
     ~Knight() { std::cout << "~Knight()" << std::endl; }
 
     int32 _hp;
-    int32 _tmp;
+    int32 _mp;
 };
 
 int main()
 {
-    Knight* knight = xnew<Knight>();
-    xdelete(knight);
-
-    knight->_hp = 200;
+    {
+        Vector<Knight> v(5);
+        Map<int32, Knight> m;
+        m[100] = Knight();
+    }
+    
+    int a = 1;
 
     return 0;
 }
