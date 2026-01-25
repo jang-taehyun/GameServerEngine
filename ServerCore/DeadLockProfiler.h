@@ -47,7 +47,7 @@ private:
 	vector<int32>						_discoverOrder;
 
 	// 노드가 발견된 횟수 //
-	int32								_discoverCount;
+	int32								_discoverCount = 0;
 
 	// i번째 DFS 탐색이 종료되었는지 확인하는 플래그 배열 //
 	vector<bool>						_finished;

@@ -8,7 +8,7 @@
 #include <thread>
 #include <chrono>
 
-#include "Allocator.h"
+#include "ThreadManager.h"
 
 class Knight
 {
@@ -22,13 +22,26 @@ public:
 
 int main()
 {
+    for (int32 i = 0; i < 5; ++i)
     {
-        Vector<Knight> v(5);
-        Map<int32, Knight> m;
-        m[100] = Knight();
+        GThreadManager->Launch(
+            []()
+            {
+                using std::literals::chrono_literals::operator""ms;
+
+                while (true)
+                {
+                    Vector<Knight> v(10);
+                    Map<int32, Knight> m;
+                    m[100] = Knight();
+
+                    std::this_thread::sleep_for(10ms);
+                }
+            }
+        );
     }
-    
-    int a = 1;
+
+    GThreadManager->Join();
 
     return 0;
 }
