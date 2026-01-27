@@ -11,8 +11,10 @@ Memory::Memory()
 	int32 size = 0;
 	int32 tableIndex = 1;
 
-	// pool 생성
 	_pools.reserve(MAX_ALLOC_SIZE + 1);
+	_poolTable[0] = nullptr;
+
+	// pool 생성
 	CreateMemoryPool(0, 1024, 32, tableIndex);
 	CreateMemoryPool(1024, 2048, 128, tableIndex);
 	CreateMemoryPool(2048, 4096, 256, tableIndex);
@@ -33,6 +35,9 @@ void* Memory::Allocate(int32 size)
 	MemoryHeader* header = nullptr;
 	const int32 allocSize = size + sizeof(MemoryHeader);
 
+#ifdef _STOMP
+	header = reinterpret_cast<MemoryHeader*>(StompAllocator::Alloc(allocSize));
+#else
 	if (MAX_ALLOC_SIZE < allocSize)
 	{
 		// 메모리 풀링의 최대 크기를 벗어나면 일반 할당
@@ -43,6 +48,7 @@ void* Memory::Allocate(int32 size)
 		// 메모리 풀에서 꺼내 온다.
 		header = _poolTable[allocSize]->Pop();
 	}
+#endif
 
 	// 헤더를 붙여서 할당한 메모리 반환
 	return MemoryHeader::AttachHeader(header, allocSize);
@@ -58,6 +64,9 @@ void Memory::Release(void* ptr)
 	const int32 allocSize = header->allocSize;
 	ASSERT_CRASH((0 < allocSize));
 
+#ifdef _STOMP
+	StompAllocator::Release(header);
+#else
 	if (MAX_ALLOC_SIZE < allocSize)
 	{
 		// 메모리 풀링 최대 크기를 벗어나면 일반 해제
@@ -68,6 +77,7 @@ void Memory::Release(void* ptr)
 		// 메모리 풀에 반납
 		_poolTable[allocSize]->Push(header);
 	}
+#endif
 
 	header = nullptr;
 }

@@ -35,8 +35,30 @@ public:
     int32 _hp = rand() % 1000;
 };
 
+class Monster
+{
+public:
+    int64 _id = 0;
+};
+
 int main()
 {
+    // 미리 일정 개수의 객체를 할당해서 사용하는 방법 //
+    Knight* knights[100] = { nullptr, };
+    for (int32 i = 0; i < 100; ++i)
+        knights[i] = ObjectPool<Knight>::Pop();
+    for (int32 i = 0; i < 100; ++i)
+    {
+        ObjectPool<Knight>::Push(knights[i]);
+        knights[i] = nullptr;
+    }
+
+    // 필요할때마다 생성하거나 꺼내 쓰는 방법 //
+    std::shared_ptr<Knight> kptr = std::move(ObjectPool<Knight>::MakeShared());
+    
+    // xnew, xdelete를 이용하는 방법 //
+    std::shared_ptr<Knight> kptr2 = std::move(MakeShared<Knight>());
+
     for (int32 i = 0; i < 5; ++i)
     {
         GThreadManager->Launch(

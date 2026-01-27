@@ -12,3 +12,5 @@
 #include <windows.h>
 
 #include "Lock.h"
+
+#include "ObjectPool.h"

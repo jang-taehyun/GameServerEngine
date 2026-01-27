@@ -12,7 +12,7 @@
 	 Memory Pool
 ----------------------*/
 
-MemoryPool::MemoryPool(int32 allocSize) : _allocSize(allocSize), _allocCount(0)
+MemoryPool::MemoryPool(int32 allocSize) : _allocSize(allocSize), _useCount(0), _reservedCount(0)
 {
 	// SLIST_HEADER 초기화
 	::InitializeSListHead(&_header);
@@ -34,8 +34,9 @@ void MemoryPool::Push(MemoryHeader* ptr)
 	// Pool에 메모리 반납
 	::InterlockedPushEntrySList(&_header, static_cast<PSLIST_ENTRY>(ptr));
 
-	// 횟수 감소
-	_allocCount.fetch_sub(1);
+	// 횟수 조정
+	_useCount.fetch_sub(1);
+	_reservedCount.fetch_add(1);
 }
 
 MemoryHeader* MemoryPool::Pop()
@@ -50,10 +51,11 @@ MemoryHeader* MemoryPool::Pop()
 	else
 	{
 		ASSERT_CRASH((0 == memory->allocSize));
+		_reservedCount.fetch_sub(1);
 	}
 
-	// 횟수 증가
-	_allocCount.fetch_add(1);
+	// 횟수 조정
+	_useCount.fetch_add(1);
 
 	return memory;
 }

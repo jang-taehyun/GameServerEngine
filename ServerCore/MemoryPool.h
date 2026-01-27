@@ -1,8 +1,12 @@
 #pragma once
 
 /*----------------------
+* Memory pool은 object pool보다 상위 개념
+* -> object pool은 memory pool 안에 들어있는 개념
+* 
 * Memory Pool을 통해 할당된 메모리의 구조
 * [MemoryHeader][Data]
+* 
 * MemoryHeader의 역할
 * - 디버깅을 도와주는 역할
 * - 객체마다 크기가 모두 다르기 때문에 이를 추적, 관리하기 위해서 header를 붙여주자.
@@ -22,8 +26,13 @@
 * -> 비슷한 크기의 메모리를 재사용하기 위해
 * 
 * 현재 추세
-* -> windows 쪽은 메모리 풀리을 안해도 큰 성능 저하가 없음
+* -> windows 쪽은 메모리 풀링을 안해도 큰 성능 저하가 없음
 * -> linux 쪽은 여전히 느려서 메모리 풀을 사용하는 경우가 있음
+* 
+* 메모리 풀의 단점
+* -> 메모리 풀에 들어있는 메모리 영역은 공용으로 사용하기 때문에
+*	 -> 다른 객체(또는 쓰레드)에서 메모리 풀에 들어간 메모리를 접근하는 문제가 발생(오염된 메모리에 접근)
+* -> stomp allocator랑 같이 사용하는 것은 불가능하다.
 ----------------------*/
 
 /*----------------------
@@ -85,6 +94,9 @@ private:
 	int32 _allocSize;
 
 	// 메모리를 할당한 횟수
-	std::atomic<int32> _allocCount;
+	std::atomic<int32> _useCount;
+
+	// 메모리 풀에 저장된 메모리 영역의 개수
+	std::atomic<int32> _reservedCount;
 };
 
