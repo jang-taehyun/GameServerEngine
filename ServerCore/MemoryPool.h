@@ -29,8 +29,10 @@
 /*----------------------
 	 Memory Header
 ----------------------*/
+enum { SLIST_ALIGNMENT = 16 };
 
-struct MemoryHeader
+DECLSPEC_ALIGN(SLIST_ALIGNMENT)
+struct MemoryHeader : public SLIST_ENTRY
 {
 	MemoryHeader(int32 size) : allocSize(size) {}
 
@@ -64,6 +66,7 @@ struct MemoryHeader
 ----------------------*/
 
 // [MemoryHeader][Data] //
+DECLSPEC_ALIGN(SLIST_ALIGNMENT)
 class MemoryPool
 {
 public:
@@ -75,13 +78,13 @@ public:
 
 private:
 
+	// Lock-free stack을 관리
+	SLIST_HEADER _header;
+
 	// 객체가 담당하고 있는 메모리 풀의 크기
 	int32 _allocSize;
 
 	// 메모리를 할당한 횟수
 	std::atomic<int32> _allocCount;
-
-	USE_LOCK;
-	std::queue<MemoryHeader*> _queue;
 };
 

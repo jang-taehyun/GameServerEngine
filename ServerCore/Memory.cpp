@@ -16,10 +16,6 @@ Memory::Memory()
 	CreateMemoryPool(0, 1024, 32, tableIndex);
 	CreateMemoryPool(1024, 2048, 128, tableIndex);
 	CreateMemoryPool(2048, 4096, 256, tableIndex);
-	
-	// 0번째 pool 제거
-	delete _pools[0];
-	_pools[0] = nullptr;
 }
 
 Memory::~Memory()
@@ -40,7 +36,7 @@ void* Memory::Allocate(int32 size)
 	if (MAX_ALLOC_SIZE < allocSize)
 	{
 		// 메모리 풀링의 최대 크기를 벗어나면 일반 할당
-		header = reinterpret_cast<MemoryHeader*>(::malloc(allocSize));
+		header = reinterpret_cast<MemoryHeader*>(::_aligned_malloc(allocSize, SLIST_ALIGNMENT));
 	}
 	else
 	{
@@ -62,10 +58,10 @@ void Memory::Release(void* ptr)
 	const int32 allocSize = header->allocSize;
 	ASSERT_CRASH((0 < allocSize));
 
-	if (MAX_ALLOC_SIZE > allocSize)
+	if (MAX_ALLOC_SIZE < allocSize)
 	{
 		// 메모리 풀링 최대 크기를 벗어나면 일반 해제
-		::free(header);
+		::_aligned_free(header);
 	}
 	else
 	{
