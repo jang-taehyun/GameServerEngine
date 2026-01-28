@@ -27,7 +27,7 @@
 // #define xxrelease(ptr)	BaseAllocator::Release(ptr)
 // #endif
 
-#define _STOMP
+// #define _STOMP
 
 /*------------
 	Crash

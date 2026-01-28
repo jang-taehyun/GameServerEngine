@@ -29,35 +29,114 @@
 *   -> DECLSPEC_ALIGN(16)
 */
 
-class Knight
+using TL = TypeList<
+    class Player,
+    class Knight,
+    class Mage,
+    class Archer
+>;
+
+class Player
 {
 public:
-    int32 _hp = rand() % 1000;
+    Player()
+    {
+        INIT_TL(Player);
+    }
+
+    DECLARE_TL;
 };
 
-class Monster
+class Knight : public Player
 {
 public:
-    int64 _id = 0;
+    Knight()
+    {
+        INIT_TL(Knight);
+    }
+};
+
+class Mage : public Player
+{
+public:
+    Mage()
+    {
+        INIT_TL(Mage);
+    }
+};
+
+class Archer : public Player
+{
+public:
+    Archer()
+    {
+        INIT_TL(Archer);
+    }
+};
+
+class Dog
+{
+
 };
 
 int main()
 {
-    // 미리 일정 개수의 객체를 할당해서 사용하는 방법 //
-    Knight* knights[100] = { nullptr, };
-    for (int32 i = 0; i < 100; ++i)
-        knights[i] = ObjectPool<Knight>::Pop();
-    for (int32 i = 0; i < 100; ++i)
+    TypeList<Player, Knight, Mage>::Head whoAmI1;
+    TypeList<Player, Knight, Mage>::Tail::Head whoAmI2;
+    TypeList<Player, Knight, Mage>::Tail::Tail whoAmI3;
+
+    TypeList<Player, TypeList<Knight, Mage>>::Head whoAmI4;
+    TypeList<Player, TypeList<Knight, Mage>>::Tail::Tail whoAmI10;
+
+    int32 n1 = Length<TL>::value;
+    int32 n2 = Length<TypeList<Player, TypeList<Knight, Mage>>>::value;
+
+    TypeAt<TL, 0>::Result whoAmI5;
+    TypeAt<TL, 1>::Result whoAmI6;
+    TypeAt<TL, 2>::Result whoAmI7;
+    TypeAt<TL, 3>::Result whoAmI8;
+
+    int32 idx1 = IndexOf<TL, Player>::value;
+    int32 idx2 = IndexOf<TL, Knight>::value;
+    int32 idx3 = IndexOf<TL, Archer>::value;
+    int32 idx4 = IndexOf<TL, Mage>::value;
+    int32 idx5 = IndexOf<TL, Dog>::value;
+
+    bool IsCanCast1 = Conversion<Knight, Player>::exist;
+    bool IsCanCast2 = Conversion<Player, Knight>::exist;
+    bool IsCanCast3 = Conversion<Knight, Dog>::exist;
+    bool IsCanCast4 = TypeConversion<TL>::CanConvert(0, 1);
+
     {
-        ObjectPool<Knight>::Push(knights[i]);
-        knights[i] = nullptr;
+        Player* player = new Knight;
+
+        bool canCast = CanCast<Knight*>(player);
+        Knight* knight = TypeCast<Knight*>(player);
+        if (knight)
+        {
+
+        }
+
+        delete player;
     }
 
-    // 필요할때마다 생성하거나 꺼내 쓰는 방법 //
-    std::shared_ptr<Knight> kptr = std::move(ObjectPool<Knight>::MakeShared());
-    
-    // xnew, xdelete를 이용하는 방법 //
-    std::shared_ptr<Knight> kptr2 = std::move(MakeShared<Knight>());
+    {
+        Player* player = new Player;
+
+        bool canCast = CanCast<Knight*>(player);
+        Knight* knight = TypeCast<Knight*>(player);
+
+        delete player;
+    }
+
+    {
+        std::shared_ptr<Knight> knight = std::make_shared<Knight>();
+
+        bool canCast = CanCast<Player>(knight);
+        std::shared_ptr<Player> player = TypeCast<Player>(knight);
+
+        int32 BreakPoint = 1;
+    }
 
     for (int32 i = 0; i < 5; ++i)
     {
@@ -68,13 +147,6 @@ int main()
 
                 while (true)
                 {
-                    Knight* knight = xnew<Knight>();
-
-                    std::cout << (knight->_hp) << std::endl;
-
-                    std::this_thread::sleep_for(10ms);
-
-                    xdelete(knight);
                 }
             }
         );
