@@ -63,10 +63,40 @@ int main()
     {
         // TODO
 
+        for (int32 i = 0; i < 10; ++i)
         {
-            using namespace std::chrono;
-            std::this_thread::sleep_for(1s);
+            char sendBuffer[100] = "Hello World!";
+
+            int32 result = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
+            if (SOCKET_ERROR == result)
+            {
+                errorCode = ::WSAGetLastError();
+                std::cout << "send() ErrorCode : " << errorCode << std::endl;
+                return 0;
+            }
+
+            std::cout << "Send Data! Len : " << result << std::endl;
         }
+
+        using std::chrono::operator""s;
+        using std::chrono::operator""ms;
+        std::this_thread::sleep_for(1s);
+        std::this_thread::sleep_for(10ms);
+        
+        // char recvBuffer[1000] = { NULL, };
+        // result = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
+        // if (SOCKET_ERROR == result)
+        // {
+        //     errorCode = ::WSAGetLastError();
+        //     std::cout << "recv() ErrorCode : " << errorCode << std::endl;
+        //     return 0;
+        // }
+        // std::cout << "Receive Data! Data : " << recvBuffer << ", Len : " << result << std::endl;
+        // 
+        // {
+        //     using std::chrono::operator""s;
+        //     std::this_thread::sleep_for(1s);
+        // }
     }
 
     // socket 리소스 반환 //
