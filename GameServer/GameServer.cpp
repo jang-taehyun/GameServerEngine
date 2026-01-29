@@ -53,7 +53,7 @@ int main()
     * TCP 소켓과 UDP 소켓의 차이
     * -> UDP의 경우 서버에서는 listen(), accept() 함수를 호출하지 않는다.
     *    -> bind()까지 되었다면, 바로 recvfrom(), sendto() 함수를 호출
-    * -> UDP의 경우 클라이언트에서는 connect() 함수를 호출하지 않는다.
+    * -> Unconnected UDP(기본적인 UDP)의 경우 클라이언트에서는 connect() 함수를 호출하지 않는다.
     *    -> 서버 정보까지 입력되었다면, 바로 recvfrom(), sendto() 함수를 호출
     * -> UDP의 경우, 수신하는 호스트에는 server socket 하나만 있으면 된다.
     *    -> but TCP는 수신하는 호스트에서 송신하는 호스트의 소켓을 하나 더 만든다.
@@ -61,7 +61,7 @@ int main()
     * 
     * client의 경우, TCP 소켓, UDP 소켓 모두 IP 주소와 port 번호를 연동하지 않는다.
     * -> 데이터를 처음 보낼 때, 자동으로 client의 IP 주소와 port 번호가 연동된다.
-    * -> UDP의 경우, sendto() 함수를 호출할 때 자동으로 client의 IP 주소와 port 번호가 연동된다.
+    * -> Unconnected UDP(기본적인 UDP)의 경우, sendto() 함수를 호출할 때 자동으로 client의 IP 주소와 port 번호가 연동된다.
     * -> TCP의 경우, connect() 함수를 호출할 때 자동으로 client의 IP 주소와 port 번호가 연동된다.
     */
     
