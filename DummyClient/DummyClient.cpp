@@ -15,6 +15,9 @@ void ErrorHandling(const char* cause)
 
 int main()
 {
+    using std::chrono::operator""s;
+    std::this_thread::sleep_for(1s);
+
     int32 errorCode = 0;
     WSADATA wsaData;
 
@@ -29,66 +32,74 @@ int main()
     * - socket 입출력 모델을 알아야하는 이유
     *   -> 교양적인 이유도 있고, boost::asio를 더 많이 이해하기 위해서도 필요함
     * 
-    * 1) select 모델
-    * - 핵심 : 소켓 함수 호출이 성공할 시점을 미리 알 수 있다!
-    *   - read, write를 하기 전에 read, write를 할 수 있는지 먼저 체크한다!
-    *   -> 문제 상황
-            - recv buffer에 데이터가 없는 상황에서 read를 하거나, send buffer가 가득 찬 상황에서 write를 하는 경우
-                -> 블로킹 소켓은 recv buffer에 데이터가 들어오거나, send buffer에 데이터가 들어갈 공간이 생길때까지 블로킹을 함.
-                -> 논블로킹 소켓의 경우, 리턴은 하지만 WSAEWOULDBLOCK 에러가 발생하면 다시 시도를 해야 되는 경우가 있음
-    * - select() 함수가 핵심이 되는 모델
-    * - windows, linux 모두 존재
-    * - 블로킹 소켓, 논블로킹 소켓 모두 사용 가능
-    *   -> 블로킹 소켓에 적용하는 경우 : 조건이 만족되지 않아서 블로킹되는 상황을 예방할 수 있음
-    *   -> 논블로킹 소켓에 적요하는 경우 : 조건이 만족되지 않아서 불필요하게 반복 체크하는 상황을 예방할 수 있음
+    * 2) WSAEventSelect 모델
+    * - windows에만 있는 기능
+    * - WSAEventSelect() 함수가 핵심이 되는 모델
+    * - 소켓과 관련된 네트워크 이벤트를 [이벤트 객체]를 통해 감지해 전달받는다.
+    * - select 모델과 비슷하나, select 모델과 다르게 비동기로 동작한다.
+    *   - select 모델과 다르게, 소켓을 대상으로 read/write를 하기 전에 event 객체를 통해서 read/write가 가능한지 통지 받는다.
+    *   - select 모델과 다르게, 전체적으로 리셋하고 다시 등록하는 과정이 없다.
+    * - event 객체를 만들어서 소켓과 연동시켜줘야 한다.
+    * - 소켓과 event 객체가 1:1로 매핑된다.
+    *   - 소켓 갯수 만큼 event 객체를 만들어줘야 한다.
+    * - 왠만하면 논블로킹 소켓을 이용해 WSAEventSelect 모델을 사용한다.
     * 
-    * - 사용법
-    *   1) socket set을 만든다.
-        2) socket set을 초기화하고 소켓을 socket set에 등록해 관찰 대상으로 만든다.
-    *       - 관찰은 읽기[ ], 쓰기[ ], 예외(OOB)[ ]로 나뉜다.
-    *           - 읽기 : read의 성공 시점을 체크(관찰)
-    *           - 쓰기 : write의 성공 시점을 체크(관찰)
-    *           - 예외 : OOB(OutOfBand) 체크
-    *               - OOB(OutOfBand) : send() 함수의 마지막 인자에 MSG_OOB로 세팅해 보내는 특별한 데이터
-    *                   - 받는 쪽에서도 recv OOB 세팅을 해야 읽을 수 있다.
-    *                   - 긴급 상황 또는 특이한 상황을 알리는 용도로 사용
-    *       - 관찰은 하나만 적용할 수 있는게 아니라, 여러 개를 적용할 수 있다.
-    *           - ex) 한 소켓의 읽기, 쓰기를 모두를 관찰하고 싶다면, 읽기, 쓰기 모두 등록 가능
-    *   3) select() 함수를 호출한다.
-    *       - select() 함수를 호출할 때, 매개변수로 recv socket set, send socket set, exception socket set을 넣어준다.
-    *           - 만약 쓰지 않는 socket set이 있다면, NULL로 넣어주면 된다.
-    *       - select() 함수를 호출하면 등록된 소켓을 대상으로 관찰을 시작한다.
-    *       - socket set에 등록된 소켓 중 준비가 완료된 소켓이 하나라도 있다면 리턴한다.
-    *           -> ex) 한 소켓은 recv socket set에, 다른 하나의 소켓은 send socket set에 등록했다면,
-    *                  둘 중 하나라도 준비가 완료되었다면 select() 함수는 리턴한다.
-    *           - select() 함수가 리턴되었을 때, 준비가 되지 않는 소켓은 관찰 대상에서 제거된다.
-    *           - select() 함수의 리턴 값 : 준비된 소켓의 개수
-    *       - select() 함수는 동기 함수
-    *   4) 관찰 대상에 남아있는 소켓을 대상으로 read 또는 write를 진행한다.
-    *   5) 2~4 과정을 반복한다.
+    * 이벤트 객체를 다루는 함수들
+    * - 생성
+    *   - WSACreateEvent() 함수 : 수동 리셋 방식, non-signal 상태로 시작
     * 
-    * - 장점
-    *   - 블로킹 소켓 : read, write 관련 함수가 리턴할 때까지 기다리지 않아도 된다.
-    *   - 논블로킹 소켓 : 반복 체크하는 상황을 예방할 수 있다.
-    *     -> 논블로킹 소켓의 경우, read/write가 가능한지 먼저 체크하기 때문에 안전하게 read/write를 진행 가능
+    * - 삭제
+    *   - WSACloseEvent() 함수
     * 
-    * - 단점
-    *   - 한계 : socket set에 등록할 수 있는 소켓의 수가 정해져 있음
-    *       -> socket set에 등록할 수 있는 소켓의 수가 생각보다 적음
-    *   - 매번마다 socket set을 초기화하고 소켓을 등록해야 한다
-    *       -> 전체적인 코드 성능에 영향을 끼친다
-    */
+    * - 시그널 상태 감지
+    *   - WSAWaitForMultipleEvents() 함수 : event를 통지받는 함수
+    *       - 이벤트 객체의 배열 중 event가 발생한 event 객체의 맨 처음 인덱스를 반환
+    *       - 매개 변수 설명
+                - count, event  : 이벤트 객체의 배열
+                - waitAll       : 모두 기다릴지, 아니면 하나만 완료되어도 리턴할지 설정
+                - timeout       : 기다릴 시간
+                - fAlertable    : false(WSAEventSelect 모델에서는 사용 안함, 나중에 사용)
 
-    /**
-    * 함수의 동기 vs 비동기 구분
-    * - 동기
-    *   -> 결과물이 나올때까지 대기
-    *   -> ex) ::select() 함수의 경우, 원하는 결과가 나올 때까지 대기하다가, 원하는 결과가 하나라도 나오면 리턴
-    *   -> 근데 블로킹을 말한거 같은데?? 이상하다
-    * - 비동기
-    *   -> 결과물이 안나와도 리턴
-    *   -> 근데 논블로킹을 말한거 같은데?? 이상하다
-    *
+    * - 구체적인 네트워크 이벤트를 알아는 방법
+    *   - WSAEnumNetworkEvents() 함수
+    *       - 매개 변수
+    *           - 소켓
+    *           - 소켓과 관련된 이벤트 객체
+    *           - networkEvents
+    *       - 소켓과 관련된 이벤트 객체를 넘겨주면, 이벤트 객체는 자동으로 non-signal 상태가 된다.
+    *       - networkEvents 객체에 네트워크 이벤트 또는 오류 정보가 저장된다
+    * 
+    * - 소켓과 event 객체를 연동하는 함수
+    *   - WSAEventSelect(소켓, event 객체, networkEvents)
+    *       - networkEvents : 어떤 event를 감지하고 싶은지 넣어주는 부분
+    *       - 관찰할 네트워크 이벤트(networkEvents)
+    *           - FD_ACCEPT     : 접속한 클라이언트가 있음(accept)
+    *           - FD_READ       : 데이터 수신 가능(recv, recvfrom)
+    *           - FD_WRITE      : 데이터 송신 가능(send, sendto)
+    *           - FD_CLOSE      : 상대가 접속 종료
+    *           - FD_CONNECT    : 통신을 위한 연결 절차 완료
+    *           - FD_OOB
+    * 
+    * 주의 사항
+    * - WSAEventSelect() 함수를 호출하면, 해당 소켓은 자동으로 논블로킹 소켓으로 전환된다.
+    * - accept() 함수가 리턴한 소켓은 serverSocket과 동일한 속성(networkEvents)을 갖는다.
+    *   - serverSocket은 FD_ACCEPT 속성을 가지고 있는데, accept() 함수가 리턴하는 소켓도 동일하게 FD_ACCEPT 속성을 갖는다.
+    *   - 때문에 accept() 함수가 리턴한 소켓은 FD_READ, FD_WRITE 속성을 따로 등록해야 한다.
+    * - 드물게 WSAEWOULDBLOCK 오류가 발생할 수 있어 예외 처리가 필요하다.
+    * 
+    * 중요한 부분
+    * - 이벤트 발생 시, 적절한 소켓 함수를 호출해야 한다.
+    *   - 그렇지 않으면, 다음 번에 동일한 네트워크 이벤트가 발생하지 않는다.(꺼내 쓸때까지는 다시 통지를 하지 않는다.)
+    *   - FD_READ 이벤트가 떴으면, recv(), recvfrom() 함수를 호출해야 하고, 호출하지 않으면 FD_READ 이벤트가 다시 통지되지 않는다.
+    * 
+    * 장점
+    * - select 모델과 다르게, 전체적으로 리셋하고 다시 등록하는 과정이 없다.
+    * - select 모델과 다르게, loop를 돌지 않아도 event를 한번에 받을 수 있다.
+    *   -> 하지만 등록할 수 있는 event 객체의 최대 개수가 존재한다.
+    * 
+    * 용도
+    * - select 모델, WSAEventSelect 모델은 클라이언트를 서버에 붙일 때 사용(클라이언트에서 사용)
+    *   -> 서버에서는 사용하지 않음
     */
 
     SOCKET clientSocket = ::socket(AF_INET, SOCK_STREAM, 0);

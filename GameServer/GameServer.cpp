@@ -82,109 +82,155 @@ int main()
         return 0;
     }
 
-    // session 배열 생성
+    // session 객체(소켓)과 1:1 매칭할 event 객체 배열 생성 //
+    std::vector<WSAEVENT> wsaEvents;
     std::vector<Session> sessions;
+    wsaEvents.reserve(100);
     sessions.reserve(100);
 
-    // socket set 생성 //
-    fd_set readSet;
-    fd_set writeSet;
+    // server socket을 위한 event 객체 생성 //
+    WSAEVENT serverEvent = ::WSACreateEvent();
+
+    // server socket과 event 객체를 연동 //
+    if (SOCKET_ERROR == ::WSAEventSelect(serverSocket, serverEvent, FD_ACCEPT | FD_CLOSE))
+    {
+        ErrorHandling("WSAEventSelect()");
+        return 0;
+    }
+
+    // server socket과 server socket과 연동한 event 객체를 배열에 넣기 //
+    Session serverSession;
+    serverSession.socket = serverSocket;
+    sessions.push_back(serverSession);
+    wsaEvents.push_back(serverEvent);
     
     while (true)
     {
-        // socket set 초기화 //
-        FD_ZERO(&readSet);
-        FD_ZERO(&writeSet);
-
-        // 소켓을 socket set에 등록 //
-        // 서버 소켓은 read set에 등록해야 한다.
-        // -> accept할 대상이 있을 때까지 기다리기 때문
-        FD_SET(serverSocket, &readSet);
-
-        for (Session& s : sessions)
+        // 여러 개의 event 객체 중 하나라도 singal 상태가 될때까지 대기 //
+        DWORD retVal = ::WSAWaitForMultipleEvents(wsaEvents.size(), &wsaEvents[0], FALSE, WSA_INFINITE, FALSE);
+        if (WSA_WAIT_FAILED == retVal)
         {
-            if(s.recvByte <= s.sendByte)
-                FD_SET(s.socket, &readSet);
-            else
-                FD_SET(s.socket, &writeSet);
+            ErrorHandling("WSAWaitForMultipleEvents()");
+            continue;
+        }
+        int32 idx = retVal - WSA_WAIT_EVENT_0;
+
+        // 어떤 네트워크 이벤트가 발생했는지 체크 //
+        // 이때 event 객체는 자동으로 non-signal 상태로 전환된다.
+        WSANETWORKEVENTS networkEvents;
+        if (SOCKET_ERROR == ::WSAEnumNetworkEvents(sessions[idx].socket, wsaEvents[idx], &networkEvents))
+        {
+            ErrorHandling("WSAEnumNetworkEvents()");
+            continue;
         }
 
-        // select() 함수 호출 //
-        // select() 함수의 마지막 인자
-        // -> 옵션(넣어도 되고, nullptr로 넣어도 됨)
-        // -> timeout(대기 시간)를 설정하는 부분
-        // -> nullptr이라면 소켓이 하나라도 준비될 때까지 무한 대기
-        // -> timeval 구조체의 포인터를 넣어준다면 대기 시간만큼 대기하고 리턴
-        //      -> 대기 시간만큼 기다리는 동안 소켓이 하나라도 준비되었다면 리턴
-        //      -> 대기 시간만큼 기다린 후에도 소켓이 하나라도 준비되지 않았다면 리턴
-        int32 retVal = ::select(0, &readSet, &writeSet, nullptr, nullptr);
-        if (SOCKET_ERROR == retVal)
+        // accept 체크 //
+        if (FD_ACCEPT & networkEvents.lNetworkEvents)
         {
-            ErrorHandling("select()");
-            break;
-        }
+            // error 체크
+            if (networkEvents.iErrorCode[FD_ACCEPT_BIT])
+            {
+                ErrorHandling("error!! : FD_ACCEPT_BIT");
+                continue;
+            }
 
-        // 소켓이 socket set에 등록되어 있는 지 확인 //
-        // socket set에 등록되어 있지 않으면 0을 리턴
-        // socket set에 등록되어 있으면 0이 아닌 값을 리턴
-        if (FD_ISSET(serverSocket, &readSet))
-        {
-            Session client;
-            int32 addrLen = sizeof(client.addr);
-
-            client.socket = ::accept(serverSocket, (SOCKADDR*)&(client.addr), &addrLen);
-            if (INVALID_SOCKET == client.socket)
+            // 정상적으로 accept할 준비가 되었으므로 accept() 호출 //
+            Session clientSession;
+            int32 addrLen = sizeof(clientSession.addr);
+            clientSession.socket = ::accept(serverSocket, (SOCKADDR*)&(clientSession.addr), &addrLen);
+            if (INVALID_SOCKET == clientSession.socket)
             {
                 ErrorHandling("accept()");
-                break;
+                continue;
             }
 
             std::cout << "Client Connected!" << std::endl;
 
-            sessions.push_back(client);
+            // client socket과 연동할 event 객체를 생성하고 연동 //
+            WSAEVENT event = ::WSACreateEvent();
+            if (SOCKET_ERROR == ::WSAEventSelect(clientSession.socket, event, FD_READ | FD_WRITE | FD_CLOSE))
+            {
+                ErrorHandling("WSAEventSelect()");
+                continue;
+            }
+
+            // session과 event 객체를 배열에 넣기 //
+            sessions.push_back(clientSession);
+            wsaEvents.push_back(event);
         }
 
-        for (Session& s : sessions)
+        // client session의 소켓 체크 //
+        if ((FD_READ & networkEvents.lNetworkEvents) || (FD_WRITE & networkEvents.lNetworkEvents))
         {
-            if (FD_ISSET(s.socket, &readSet))
+            // error 체크
+            if ((FD_READ & networkEvents.lNetworkEvents) && networkEvents.iErrorCode[FD_READ_BIT])
             {
-                int32 recvLen = ::recv(s.socket, s.recvBuffer, sizeof(s.recvBuffer), 0);
-                if (0 >= recvLen)
+                ErrorHandling("error!! : FD_READ_BIT");
+                continue;
+            }
+            if ((FD_WRITE & networkEvents.lNetworkEvents) && networkEvents.iErrorCode[FD_WRITE_BIT])
+            {
+                ErrorHandling("error!! : FD_WRITE_BIT");
+                continue;
+            }
+
+            Session& s = sessions[idx];
+
+            // read //
+            if (0 == s.recvByte)
+            {
+                int32 recvLen = ::recv(s.socket, s.recvBuffer, BUFSIZE, 0);
+                
+                // error 체크
+                if (SOCKET_ERROR == recvLen)
                 {
-                    // TODO: sessions 제거
+                    if (::WSAGetLastError() != WSAEWOULDBLOCK)
+                    {
+                        ErrorHandling("recv()");
+                        // TODO: Remove Session
+                    }
 
                     continue;
                 }
 
                 s.recvByte = recvLen;
+                std::cout << "Recv len : " << s.recvByte << std::endl;
             }
 
-            if (FD_ISSET(s.socket, &writeSet))
+            // write //
+            if (s.recvByte > s.sendByte)
             {
-                // send() 함수 동작
-                // 블로킹 소켓 : 모든 데이터를 다 보냄
-                // 논블로킹 소켓 : 상대방 recv buffer의 상황에 따라서 일부만 보낼 수 있음
                 int32 sendLen = ::send(s.socket, &(s.recvBuffer[s.sendByte]), s.recvByte - s.sendByte, 0);
+
+                // error 체크
                 if (SOCKET_ERROR == sendLen)
                 {
-                    // TODO: sessions 제거
+                    if (::WSAGetLastError() != WSAEWOULDBLOCK)
+                    {
+                        ErrorHandling("send()");
+                        // TODO: Remove Session
+                    }
 
                     continue;
                 }
 
                 s.sendByte += sendLen;
-                if (s.sendByte == s.recvByte)
+                if (s.recvByte == s.sendByte)
                 {
                     s.recvByte = 0;
                     s.sendByte = 0;
                 }
+
+                std::cout << "Send len : " << sendLen << std::endl;
             }
         }
-    }
 
-    // FD_CLR() 매크로 함수
-    // - 소켓을 socket set에서 제거하는 함수
-    // - ex) FD_CLR(serverSocket, &readSet);
+        // FD_CLOSE 처리 //
+        if (FD_CLOSE & networkEvents.lNetworkEvents)
+        {
+            // TODO: Remove session
+        }
+    }
 
     ::closesocket(serverSocket);
     ::WSACleanup();
