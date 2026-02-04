@@ -15,6 +15,7 @@ void ErrorHandling(const char* cause)
 
 int main()
 {
+    std::cout << "I'm client!!" << std::endl;
     using std::chrono::operator""s;
     std::this_thread::sleep_for(1s);
 
@@ -32,74 +33,38 @@ int main()
     * - socket 입출력 모델을 알아야하는 이유
     *   -> 교양적인 이유도 있고, boost::asio를 더 많이 이해하기 위해서도 필요함
     * 
-    * 2) WSAEventSelect 모델
-    * - windows에만 있는 기능
-    * - WSAEventSelect() 함수가 핵심이 되는 모델
-    * - 소켓과 관련된 네트워크 이벤트를 [이벤트 객체]를 통해 감지해 전달받는다.
-    * - select 모델과 비슷하나, select 모델과 다르게 비동기로 동작한다.
-    *   - select 모델과 다르게, 소켓을 대상으로 read/write를 하기 전에 event 객체를 통해서 read/write가 가능한지 통지 받는다.
-    *   - select 모델과 다르게, 전체적으로 리셋하고 다시 등록하는 과정이 없다.
-    * - event 객체를 만들어서 소켓과 연동시켜줘야 한다.
-    * - 소켓과 event 객체가 1:1로 매핑된다.
-    *   - 소켓 갯수 만큼 event 객체를 만들어줘야 한다.
-    * - 왠만하면 논블로킹 소켓을 이용해 WSAEventSelect 모델을 사용한다.
+    * 3) Overlapped I/O 모델 (비동기, 논블로킹)
     * 
-    * 이벤트 객체를 다루는 함수들
-    * - 생성
-    *   - WSACreateEvent() 함수 : 수동 리셋 방식, non-signal 상태로 시작
+    * 동작 과정
+    * - Overlapped 계열의 함수를 호출(WSASend(), WSARecv(), AcceptEx(), ConnectEx() 등)
+    * - Overlapped 계열의 함수가 성공했는지 확인한다.
+    *   - 성공했으면 결과를 얻어서 처리
+    *   - 실패했으면 사유를 확인한다.
+    *       - pending 상태(준비가 되지 않는 상태)라면 추후에 완료가 되었을 때 통지를 하도록 요청한다
+    *         (완료를 통지받는 방법 : event 방식, 콜백 함수 방식)
     * 
-    * - 삭제
-    *   - WSACloseEvent() 함수
+    * Overlapped 계열의 함수 특징
+    * - buffer를 받을 때, WSABUF 배열의 시작 주소 및 개수(buffer의 개수, 배열의 길이가 아님)를 받는다.
+    *   - 여러 개의 buffer를 한번에 받는 이유 : Scatter-Gather
+    *       -> 여러 개로 쪼개져 있는 buffer들을 하나로 모아서 send할 수 있거나,
+    *           받은 데이터를 여러 개로 쪼개져 있는 buffer들에 쪼개서 저장할 수 있다.(성능 향상의 핵심)
+    * - WSAOVERLAPPED 구조체의 포인터를 받는다.
+    *   - WSAOVERLAPPED 구조체에서는 event 객체의 핸들값만 지정하고 나머지는 건들지 않는다.
+    *       -> 나머지 부분들은 OS 또는 Overlapped 계열 함수 내부에서 다루기 때문
+    * - WSASend(), WSARecv() 함수를 호출한 뒤에, 매개 변수로 넣어줬던 WSAOVERLAPPED 구조체와 buffer들은 send, recv가 모두 완료하기 전까지 건들면 안된다.
+    *   -> 이유 : WSASend(), WSARecv() 함수를 호출한 시점과, read/write가 실행되는 시점이 다르기 때문
+    *   -> 때문에 WSASend(), WSARecv() 함수를 여러 번 호출할 때마다, send, recv가 실행 완료되기 전이라면 다른 WSAOVERLAPPED 구조체를 넣어줘야 한다
     * 
-    * - 시그널 상태 감지
-    *   - WSAWaitForMultipleEvents() 함수 : event를 통지받는 함수
-    *       - 이벤트 객체의 배열 중 event가 발생한 event 객체의 맨 처음 인덱스를 반환
-    *       - 매개 변수 설명
-                - count, event  : 이벤트 객체의 배열
-                - waitAll       : 모두 기다릴지, 아니면 하나만 완료되어도 리턴할지 설정
-                - timeout       : 기다릴 시간
-                - fAlertable    : false(WSAEventSelect 모델에서는 사용 안함, 나중에 사용)
-
-    * - 구체적인 네트워크 이벤트를 알아는 방법
-    *   - WSAEnumNetworkEvents() 함수
-    *       - 매개 변수
-    *           - 소켓
-    *           - 소켓과 관련된 이벤트 객체
-    *           - networkEvents
-    *       - 소켓과 관련된 이벤트 객체를 넘겨주면, 이벤트 객체는 자동으로 non-signal 상태가 된다.
-    *       - networkEvents 객체에 네트워크 이벤트 또는 오류 정보가 저장된다
+    * 3-1) event 기반 Overlapped I/O 모델
+    * - event 객체를 통해 완료를 통지받는 방법
+    * - event 객체가 signal 상태가 되면, Overlapped 계열의 함수가 완료가 되었다는 것을 알 수 있다
     * 
-    * - 소켓과 event 객체를 연동하는 함수
-    *   - WSAEventSelect(소켓, event 객체, networkEvents)
-    *       - networkEvents : 어떤 event를 감지하고 싶은지 넣어주는 부분
-    *       - 관찰할 네트워크 이벤트(networkEvents)
-    *           - FD_ACCEPT     : 접속한 클라이언트가 있음(accept)
-    *           - FD_READ       : 데이터 수신 가능(recv, recvfrom)
-    *           - FD_WRITE      : 데이터 송신 가능(send, sendto)
-    *           - FD_CLOSE      : 상대가 접속 종료
-    *           - FD_CONNECT    : 통신을 위한 연결 절차 완료
-    *           - FD_OOB
-    * 
-    * 주의 사항
-    * - WSAEventSelect() 함수를 호출하면, 해당 소켓은 자동으로 논블로킹 소켓으로 전환된다.
-    * - accept() 함수가 리턴한 소켓은 serverSocket과 동일한 속성(networkEvents)을 갖는다.
-    *   - serverSocket은 FD_ACCEPT 속성을 가지고 있는데, accept() 함수가 리턴하는 소켓도 동일하게 FD_ACCEPT 속성을 갖는다.
-    *   - 때문에 accept() 함수가 리턴한 소켓은 FD_READ, FD_WRITE 속성을 따로 등록해야 한다.
-    * - 드물게 WSAEWOULDBLOCK 오류가 발생할 수 있어 예외 처리가 필요하다.
-    * 
-    * 중요한 부분
-    * - 이벤트 발생 시, 적절한 소켓 함수를 호출해야 한다.
-    *   - 그렇지 않으면, 다음 번에 동일한 네트워크 이벤트가 발생하지 않는다.(꺼내 쓸때까지는 다시 통지를 하지 않는다.)
-    *   - FD_READ 이벤트가 떴으면, recv(), recvfrom() 함수를 호출해야 하고, 호출하지 않으면 FD_READ 이벤트가 다시 통지되지 않는다.
-    * 
-    * 장점
-    * - select 모델과 다르게, 전체적으로 리셋하고 다시 등록하는 과정이 없다.
-    * - select 모델과 다르게, loop를 돌지 않아도 event를 한번에 받을 수 있다.
-    *   -> 하지만 등록할 수 있는 event 객체의 최대 개수가 존재한다.
-    * 
-    * 용도
-    * - select 모델, WSAEventSelect 모델은 클라이언트를 서버에 붙일 때 사용(클라이언트에서 사용)
-    *   -> 서버에서는 사용하지 않음
+    * 동작 과정
+    * 1) 비동기 입출력을 지원하는 소켓과 통지를 받기 위한 event 객체 생성
+    * 2) 1번 과정에서 생성한 비동기 소켓과 event 객체를 넣어줘서 비동기 입출력 함수를 호출한다.
+    * 3) 비동기 작업이 바로 완료되지 않았다면, WSA_IO_PENDING 오류 코드를 반환
+    *       -> OS는 event 객체를 signal 상태로 만들어서 완료 상태를 통지한다.(WSAWaitForMultipleEvents() 함수를 호출해 signal 상태인지 확인 가능)
+    * 4) WSAGetOverlappedResult() 함수를 호출해서 비동기 입출력 결과 확인 및 데이터 처리
     */
 
     SOCKET clientSocket = ::socket(AF_INET, SOCK_STREAM, 0);
@@ -144,52 +109,47 @@ int main()
 
     std::cout << "Connected to Server!" << std::endl;
 
-    // send
     char sendBuffer[100] = "Hello World!";
+
+    // WSAOVERLAPPED 객체, event 객체 생성 //
+    WSAOVERLAPPED overlapped = {};
+    overlapped.hEvent = ::WSACreateEvent();
+
     while (true)
     {
-        // non-blocking 소켓인 경우, send(), sendto() 호출 시 send buffer에 데이터가 들어갈 공간이 없다면 SOCKET_ERROR 반환 //
-        int32 sendLen = ::send(clientSocket, sendBuffer, sizeof(sendBuffer), 0);
-        if (SOCKET_ERROR == sendLen)
+        // WSABUF 생성 //
+        // WSABUF는 없애도 되지만, WSABUF에 넣어준 buffer(session.recvBuffer)는 없애면 안된다.
+        WSABUF wsaBuf;
+        wsaBuf.buf = sendBuffer;
+        wsaBuf.len = 100;
+
+        DWORD sendLen = 0;
+        DWORD flags = 0;
+
+        // Overlapped 계열의 함수 호출 //
+        if (SOCKET_ERROR == ::WSASend(clientSocket, &wsaBuf, 1, &sendLen, flags, &overlapped, nullptr))
         {
-            // 해당 socket의 send buffer에 데이터가 없는 경우
-            if (WSAEWOULDBLOCK == ::WSAGetLastError())
-                continue;
-
-            // error 발생!
-            ErrorHandling("send()");
-            break;
-        }
-
-        std::cout << "Send Data! Len : " << sendLen << std::endl;
-
-        // recv
-        while (true)
-        {
-            char recvBuffer[1000] = { NULL, };
-
-            // non-blocking 소켓인 경우, recv(), recvfrom() 호출 시 recv buffer에 데이터가 없다면 SOCKET_ERROR 반환 //
-            int32 recvLen = ::recv(clientSocket, recvBuffer, sizeof(recvBuffer), 0);
-            if (SOCKET_ERROR == recvLen)
+            if (WSA_IO_PENDING == ::WSAGetLastError())
             {
-                // 해당 socket의 recv buffer에 데이터가 없는 경우
-                if (WSAEWOULDBLOCK == ::WSAGetLastError())
-                    continue;
+                // pending 상태 //
 
-                // error 발생!
-                ErrorHandling("recv()");
+                // event가 signal 상태가 될 때까지 대기 //
+                ::WSAWaitForMultipleEvents(1, &overlapped.hEvent, TRUE, WSA_INFINITE, FALSE);
+
+                // 비동기 입출력 결과 확인 및 데이터 처리 //
+                ::WSAGetOverlappedResult(clientSocket, &overlapped, &sendLen, FALSE, &flags);
+
+                std::cout << "Data Overlapped Send Len = " << sendLen << std::endl;
+
+            }
+            else
+            {
+                // TODO: 문제 있는 상황
                 break;
             }
-            // 연결이 끊긴 상황
-            else if (0 == recvLen)
-            {
-                std::cout << "Unconnected to Server!" << std::endl;
-                break;
-            }
-
-            std::cout << "Recv Data len : " << recvLen << std::endl;
-            break;
         }
+        else
+            std::cout << "Send Data! Len : " << sendLen << std::endl;
 
         using std::chrono::operator""s;
         std::this_thread::sleep_for(1s);
