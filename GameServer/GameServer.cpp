@@ -38,6 +38,23 @@ struct Session
     }
 };
 
+void CALLBACK RecvCallback(
+    IN DWORD dwError,                   // 오류 코드(오류가 발생하면 0이 아닌 값)
+    IN DWORD cbTransferred,             // 수신한 byte
+    IN LPWSAOVERLAPPED lpOverlapped,    // 비동기 입출력 함수 호출 시 넘겨준 WSAOVERLAPPED 구조체
+    IN DWORD dwFlags                    // 0
+)
+{
+    using namespace std;
+    cout << "Data Recv Len Callback : " << cbTransferred << endl;
+
+    // session 구조체 복구 //
+    Session* s = reinterpret_cast<Session*>(lpOverlapped);
+    s->overlapped;
+
+    // TODO
+}
+
 int main()
 {
     std::cout << "I'm server!!" << std::endl;
@@ -106,9 +123,6 @@ int main()
             return 0;
         }
 
-        // event 객체 생성 //
-        session.overlapped.hEvent = ::WSACreateEvent();
-
         std::cout << "Client Connected!" << std::endl;
 
         while (true)
@@ -122,20 +136,15 @@ int main()
             DWORD recvLen = 0;
             DWORD flags = 0;
 
-            // Overlapped 계열의 함수 호출 //
-            if (SOCKET_ERROR == ::WSARecv(session.socket, &wsaBuf, 1, &recvLen, &flags, (LPWSAOVERLAPPED)&session, nullptr))
+            // 비동기 입출력 함수 호출 //
+            if (SOCKET_ERROR == ::WSARecv(session.socket, &wsaBuf, 1, &recvLen, &flags, (LPWSAOVERLAPPED)&session, RecvCallback))
             {
                 if (WSA_IO_PENDING == ::WSAGetLastError())
                 {
                     // pending 상태 //
 
-                    // event가 signal 상태가 될 때까지 대기 //
-                    ::WSAWaitForMultipleEvents(1, &(session.overlapped.hEvent), TRUE, WSA_INFINITE, FALSE);
-
-                    // 비동기 입출력 결과 확인 및 데이터 처리 //
-                    ::WSAGetOverlappedResult(session.socket, (LPWSAOVERLAPPED)&session, &recvLen, FALSE, &flags);
-
-                    std::cout << "Data Overlapped Recv Len = " << recvLen << std::endl;
+                    // 쓰레드를 alterable wait 상태로 전환 //
+                    ::SleepEx(INFINITE, TRUE);
                 }
                 else
                 {
@@ -148,7 +157,6 @@ int main()
         }
 
         ::closesocket(session.socket);
-        ::WSACloseEvent(session.overlapped.hEvent);
     }
 
     ::closesocket(serverSocket);
@@ -156,3 +164,51 @@ int main()
 
     return 0;
 }
+
+/**
+* I/O 멀티플렉싱 모델(성능이 낮은 순에서 높은 순으로 나열)
+* 
+* 1) Select 모델
+*   - 장점)
+*       - 윈도우/리눅스 공통(크로스 플랫폼)
+*   - 단점)
+*       - 성능 최하(매번 소켓을 socket set에 등록하는 비용이 존재)
+*       - socket set에 등록할 수 있는 소켓의 최대 개수가 존재(64개)
+* 
+* 2) WSAAsyncSelect 모델
+*   - socket의 이벤트(네트워크 이벤트)를 윈도우 메시지 형태로 처리하는 모델
+*   - 일반 윈도우 메시지랑 같이 처리해서 성능이 애매함
+* 
+* 3) WSAEventSelect 모델
+*   - 장점)
+*       - 비교적 뛰어난 성능
+*   - 단점
+*       - OS에 감시하도록 요청할 수 있는 event 객체의 최대 개수가 존재(64개)
+* 
+* 4) event 기반 Overlapped 모델
+*   - 장점)
+*       - 성능이 좋다.
+*   - 단점)
+*       - OS에 감시하도록 요청할 수 있는 event 객체의 최대 개수가 존재(64개)
+* 
+* 5) completion routine 기반 Overlapped 모델
+*   - 장점)
+*       - 성능이 좋다.
+*   - 단점
+*       - 모든 비동기 소켓 함수에서 사용 가능하지 않음(예를 들어서 AcceptEX() 함수에서 사용 못함)
+*       - 빈번한 alterable wait 상태로 전환하는 비용으로 인해 성능이 저하될 수 있다.
+*       - 다른 쓰레드가 completion routine을 처리할 수 없다.(일감 분배 측면에서 아쉽다)
+* 
+* 6) IOCP
+* -> 매번마다 alterable wait로 전환하는 비용이 없다.
+*/
+
+/**
+* Reactor Pattern
+* - 소켓의 상태를 확인한 후에 뒤늦게 recv, send를 호출하는 패턴
+* - ex) WSAEventSelect 모델, Select 모델
+* 
+* Proactor Pattern
+* - 미리 recv, send를 호출한 후, 내부적으로 처리하는 패턴
+* - ex) Overlapped I/O 모델
+*/
