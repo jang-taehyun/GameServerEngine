@@ -7,21 +7,25 @@
 #include <chrono>
 
 #include "ThreadManager.h"
-#include "SocketUtils.h"
+#include "Listener.h"
 
 int main()
 {
-    std::cout << "I'm server!!" << std::endl;
+    Listener listener;
+    listener.StartAccept(NetworkAddress(L"127.0.0.1", 7777));
 
-    SOCKET socket = SocketUtils::CreateSocket();
-
-    SocketUtils::Listen(socket);
-
-    SOCKET clientSocket = ::accept(socket, nullptr, nullptr);
-
-    std::cout << "Client Connected!" << std::endl;
-
-    while (true);
+    for (int32 i = 0; i < 5; ++i)
+    {
+        GThreadManager->Launch(
+            [=]()
+            {
+                while (true)
+                {
+                    GIOCPCore.Dispatch();
+                }
+            }
+        );
+    }
 
     GThreadManager->Join();
 

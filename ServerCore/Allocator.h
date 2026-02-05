@@ -65,11 +65,11 @@ public:
 	{
 		// 할당할 메모리의 크기 구하기
 		const int32 size = static_cast<int32>(count * sizeof(T));
-		return static_cast<T*>(xxalloc(size));
+		return static_cast<T*>(PoolAllocator::Alloc(size));
 	}
 
 	void deallocate(T* ptr, size_t count)
 	{
-		xxrelease(ptr);
+		PoolAllocator::Release(ptr);
 	}
 };
