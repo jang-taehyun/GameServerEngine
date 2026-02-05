@@ -55,52 +55,29 @@ int main()
     *   -> 이유 : WSASend(), WSARecv() 함수를 호출한 시점과, read/write가 실행되는 시점이 다르기 때문
     *   -> 때문에 WSASend(), WSARecv() 함수를 여러 번 호출할 때마다, send, recv가 실행 완료되기 전이라면 다른 WSAOVERLAPPED 구조체를 넣어줘야 한다
     * 
-    * 3-2) 콜백 함수(Completion routine) 기반 Overlapped I/O 모델
-    * - 비동기 입출력 함수를 호출할 때 콜백 함수(Completion routine)을 넘겨줘서, 비동기 입출력이 완료되면 콜백 함수(completion routine)을 실행하는 방식
-    * - completion routine을 넘겨줄 때는 함수 포인터의 형식을 참고해서 인자와 매개 변수에 맞는 함수를 넣어줘야 한다.
+    * 4) IOCP(IO completion port) 모델
+    * - completion routine 기반의 Overlapped IO와 비슷
+    *   -> APC 대신 Completion port에 일감이 쌓인다.
+    * - completion port는 쓰레드마다 있는 것이 아니라, 유일하게 1개만 생성한다.
+    *   - 다수의 쓰레드가 completion port에서 일감을 받아서 실행
+    *   - completion port는 일감을 모아놓는 역할
+    * - GetQueuedCompletionStatus() 함수를 통해 completion port의 결과 처리
+    * - 멀티쓰레드에 친화적인 모델
     * 
-    * 동작 과정
-    * 1) 비동기 입출력 소켓 생성
-    * 2) Completion routine의 주소(함수 포인터)를 넘겨주면서 비동기 입출력 함수 호출
-    * 3) 비동기 입출력이 바로 완료되지 않았다면, WSA_IO_PENDING 오류 코드를 반환
-    * 4) 비동기 입출력이 완료되면 비동기 입출력을 호출한 쓰레드를 alertable wait 상태로 전환
-    *       -> alterable wait 상태가 되면 OS는 APC Queue에 들어 있는 completion routine들을 실행한다.
+    * 주요 함수
+    * - CreateIoCompletionPort() 함수
+    *   - completion port를 생성하거나, 또는 소켓을 completion port에 등록하는 함수
+    *   - completion port 생성
+    *       -> HANDLE iocpHandle = ::CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
+    *   - 소켓을 completion port에 등록
+    *       -> ::CreateIoCompletionPort((HANDLE)session->socket, iocpHandle, (ULONG_PTR)session, 0);
     * 
-    * 
-    * APC(Asynchronous procedure call)
-    * - 비동기적으로 실행되는 함수 호출
-    * - APC를 호출하기 위해서는 APC Queue가 필요하다.
-    * 
-    * APC Queue
-    * - 비동기 입출력 결과를 저장하기 위해 OS가 각 쓰레드마다 할당하는 메모리 영역
-    * - 모든 쓰레드는 자신만의 APC Queue를 가지고 있음(쓰레드마다 독립적으로 가지고 있음)
-    * - APC Queue에는 비동기적으로 호출되어야 할 함수들과 매개 변수 정보가 저장됨
-    * - 쓰레드는 알림 가능 상태(alterable wait)가 되어야 APC Queue에 있는 함수들을 호출할 수 있다.
-    * 
-    * Alterable wait
-    * - 비동기 입출력 함수를 호출한 쓰레드가 completion routine을 실행할 수 있는 상태
-    * - 사용자가 제어 가능한 state
-    * - Alterable wait 상태로 진입하는 함수들
-    *   -> WaitForSingleObjectEx(), WaitForMultipleObjectEx(), SleepEx(), WSAWaitForMultipleEvents() 등
-    * - APC Queue 안에 있는 completion routine들이 모두 실행 완료될 때 쓰레드는 alterable wait 상태를 빠져나온다.
-    *   -> 만약 completion routine 안에서 비동기 입출력 함수를 호출하면, 쓰레드는 alterable wait 상태에서 빠져나오지 않는다.
-    *   -> APC Queue 안에 completion routine이 5개가 있다고 하면, 5개가 모두 완료 될 때 alterable wait 상태를 빠져나온다.
-    * - 스레드의 State(Running, Wait, Ready)와 별개이므로 끼워서 생각하지 말자
-    * 
-    * 
-    * Overlapped I/O의 event 방식과 Overlapped I/O의 completion routine 방식의 차이
-    * - event 방식은 소켓 하나 당 event 객체를 하나씩 만들어줘야 했음(소켓과 event 객체를 1:1로 연동해야 했음)
-    *   -> completion routine 방식은 소켓과 event 객체를 1:1 대응하지 않아도 됨(completion routine 방식의 장점)
-    *   -> completion routine 방식은 한 쓰레드가 비동기 입출력 함수를 여러 번 호출한 후 한 번의 alterable wait 상태로 진입해 completion routine을 실행할 수 있음(completion routine 방식의 장점)
-    *
-    * - event 방식은 OS에 감시하도록 요청할 수 있는 event 객체의 최대 개수(한도)가 정해져 있음 -> 64개
-    *   -> 다수의 유저들을 처리할 때 복잡해짐
-    * 
-    * - completion routine 방식의 단점
-    *   -> 어떤 client socket을 대상으로 completion routine이 실행되었는지 알 수 없다.
-    *       -> 때문에 이를 극복하기 위해서, session 구조체에서 WSAOVERLAPPED 구조체를 포함할 때 맨 위에 포함한다.
-    *           -> session 구조체의 시작 주소와 WSAOVERLAPPED 구조체의 시작 주소를 일치시키기 위해
-    *   -> 다른 쓰레드가 completion routine을 처리할 수 없다.
+    * - GetQueuedCompletionStatus() 함수
+    *   - 비동기 입출력 결과를 가져오는 함수
+    *   - 멀티쓰레드 환경에서 안전하게 동작
+    *   - 비동기 입출력이 완료되지 않았다면, GetQueuedCompletionStatus() 함수가 실행될 때 쓰레드는 blocking 상태였다가, 완료되면 깨어난다.
+    *       -> 여러 쓰레드가 GetQueuedCompletionStatus() 함수를 호출했을 때, 비동기 입출력이 완료되지 않았다면 blocking 상태가 되었다가, 완료가 될 때마다 하나씩 깨어난다.(한 번에 쓰레드 하나씩만 깨어난다.)
+    *   - BOOL ret = ::GetQueuedCompletionStatus(iocpHandle, &bytesTransferred, (PULONG_PTR)&session, (LPOVERLAPPED*)&overlapped, INFINITE);
     */
 
     SOCKET clientSocket = ::socket(AF_INET, SOCK_STREAM, 0);
