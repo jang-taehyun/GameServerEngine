@@ -1,0 +1,90 @@
+#pragma once
+
+#include "NetworkAddress.h"
+#include "IOCPCore.h"
+#include "Listener.h"
+#include <functional>
+
+enum class ServiceType : uint8
+{
+	NONE,
+	SERVER,
+	CLIENT,
+};
+
+
+/*----------------
+	 Service
+----------------*/
+
+using SessionFactory = std::function<SessionRef(void)>;
+
+class Service : public std::enable_shared_from_this<Service>
+{
+public:
+	Service(ServiceType type, NetworkAddress address, IOCPCoreRef core, SessionFactory factory, int32 maxSessionCount = 1);
+	virtual ~Service();
+
+	virtual bool Start() = 0;
+	bool CanStart() { return nullptr != _sessionFactory; }
+
+	virtual void CloseService();
+	void SetSessionFactory(SessionFactory func) { _sessionFactory = func; }
+
+	SessionRef CreateSession();
+	void AddSession(SessionRef session);
+	void ReleaseSession(SessionRef session);
+	int32 GetCurrentSessionCount() { return _sessionCount; }
+	int32 GetMaxSessionCount() { return _maxSessionCount; }
+
+public:
+	ServiceType GetServiceType() { return _type; }
+	NetworkAddress GetNetAddress() { return _netAddress; }
+
+	// TODO: tmp
+	IOCPCoreRef& GetIOCPCore() { return _iocpCore; }
+
+protected:
+	USE_LOCK;
+
+	ServiceType _type;
+	NetworkAddress _netAddress = {};
+	IOCPCoreRef _iocpCore = nullptr;
+
+	Set<SessionRef> _sessions;
+	int32 _sessionCount = 0;
+	int32 _maxSessionCount = 0;
+	SessionFactory _sessionFactory = nullptr;
+};
+
+
+/*---------------------
+	 Client Service
+---------------------*/
+
+class ClientService : public Service
+{
+public:
+	ClientService(NetworkAddress targetAddress, IOCPCoreRef core, SessionFactory factory, int32 maxSessionCount = 1);
+	virtual ~ClientService();
+
+	virtual bool Start() override;
+};
+
+
+/*---------------------
+	 Server Service
+---------------------*/
+
+class ServerService : public Service
+{
+public:
+	ServerService(NetworkAddress address, IOCPCoreRef core, SessionFactory factory, int32 maxSessionCount = 1);
+	virtual ~ServerService();
+
+	virtual bool Start() override;
+	virtual void CloseService() override;
+
+private:
+	ListenerRef _listener = nullptr;
+};

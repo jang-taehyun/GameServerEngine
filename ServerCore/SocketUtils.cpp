@@ -44,7 +44,7 @@ SOCKET SocketUtils::CreateSocket()
 
 BOOL SocketUtils::SetLinger(SOCKET socket, uint16 OnOff, uint16 linger)
 {
-	LINGER option;
+	LINGER option = { 0, };
 	option.l_linger = linger;
 	option.l_onoff = OnOff;
 
