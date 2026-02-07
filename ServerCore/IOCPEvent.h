@@ -78,5 +78,8 @@ class SendEvent : public IOCPEvent
 {
 public:
 	SendEvent() : IOCPEvent(EventType::SEND) {}
+
+	// TODO: TEMP
+	std::vector<BYTE> buffer;
 };
 

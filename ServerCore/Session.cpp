@@ -17,6 +17,22 @@ Session::~Session()
 	SocketUtils::Close(_socket);
 }
 
+void Session::Send(BYTE* buffer, int32 len)
+{
+	// 생각할 문제
+	// 1) buffer 관리
+	// 2) sendEvent 관리 -> 단일 또는 여러개?, WSASend() 함수가 중첩 호출이 되는지?
+
+	// TODO: TEMP
+	SendEvent* sendEvent = xnew<SendEvent>();
+	sendEvent->owner = shared_from_this();
+	sendEvent->buffer.resize(len);
+	::memcpy(sendEvent->buffer.data(), buffer, len);
+
+	WRITE_LOCK;
+	RegisterSend(sendEvent);
+}
+
 void Session::Disconnect(const WCHAR* cause)
 {
 	if (false == _connected.exchange(false))
@@ -48,7 +64,7 @@ void Session::Dispatch(IOCPEvent* iocpEvent, int32 numOfBytes)
 		break;
 
 	case EventType::SEND:
-		ProcessSend(numOfBytes);
+		ProcessSend(static_cast<SendEvent*>(iocpEvent), numOfBytes);
 		break;
 
 	default:
@@ -88,8 +104,27 @@ void Session::RegisterRecv()
 	}
 }
 
-void Session::RegisterSend()
+void Session::RegisterSend(SendEvent* sendEvent)
 {
+	// 연결이 끊겼으면 더이상 등록하지 않는다. //
+	if (false == IsConnected())
+		return;
+
+	WSABUF wsaBuf;
+	wsaBuf.buf = (char*)sendEvent->buffer.data();
+	wsaBuf.len = (ULONG)sendEvent->buffer.size();
+
+	DWORD numOfBytes = 0;
+	if (SOCKET_ERROR == ::WSASend(_socket, &wsaBuf, 1, OUT & numOfBytes, 0, sendEvent, nullptr))
+	{
+		int32 errorCode = ::WSAGetLastError();
+		if (WSA_IO_PENDING != errorCode)
+		{
+			HandleError(errorCode);
+			sendEvent->owner = nullptr;		// RELEASE_REF
+			xdelete(sendEvent);
+		}
+	}
 }
 
 void Session::ProcessConnect()
@@ -116,14 +151,25 @@ void Session::ProcessRecv(int32 numOfBytes)
 		return;
 	}
 
-	// TODO
-	std::cout << "Recv Data Len : " << numOfBytes << std::endl;
+	// 컨텐츠 코드에서 오버라이딩한 OnRecv() 함수 호출 //
+	OnRecv(reinterpret_cast<BYTE*>(_recvBuffer), numOfBytes);
 
 	RegisterRecv();
 }
 
-void Session::ProcessSend(int32 numOfBytes)
+void Session::ProcessSend(SendEvent* sendEvent, int32 numOfBytes)
 {
+	sendEvent->owner = nullptr;		// RELEASE_REF
+	xdelete(sendEvent);
+
+	if (0 == numOfBytes)
+	{
+		Disconnect(L"Send 0");
+		return;
+	}
+
+	// 컨텐츠 코드에서 오버라이딩한 OnSend() 함수 호출 //
+	OnSend(numOfBytes);
 }
 
 void Session::HandleError(int32 errorCode)
