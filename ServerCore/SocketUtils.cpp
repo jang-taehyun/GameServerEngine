@@ -53,28 +53,28 @@ BOOL SocketUtils::SetLinger(SOCKET socket, uint16 OnOff, uint16 linger)
 
 BOOL SocketUtils::SetReuseAddress(SOCKET socket, BOOL flag)
 {
-	return SetSocketOption(socket, SOL_SOCKET, SO_REUSEADDR, flag);
+	return SetSocketOption<BOOL>(socket, SOL_SOCKET, SO_REUSEADDR, flag);
 }
 
 BOOL SocketUtils::SetRecvBufferSize(SOCKET socket, int32 size)
 {
-	return SetSocketOption(socket, SOL_SOCKET, SO_RCVBUF, size);
+	return SetSocketOption<int32>(socket, SOL_SOCKET, SO_RCVBUF, size);
 }
 
 BOOL SocketUtils::SetSendBufferSize(SOCKET socket, int32 size)
 {
-	return SetSocketOption(socket, SOL_SOCKET, SO_SNDBUF, size);
+	return SetSocketOption<int32>(socket, SOL_SOCKET, SO_SNDBUF, size);
 }
 
 BOOL SocketUtils::SetTCPNoDelay(SOCKET socket, BOOL flag)
 {
-	return SetSocketOption(socket, IPPROTO_TCP, TCP_NODELAY, flag);
+	return SetSocketOption<BOOL>(socket, IPPROTO_TCP, TCP_NODELAY, flag);
 }
 
 BOOL SocketUtils::SetUpdateAcceptSocket(SOCKET socket, SOCKET listenSocket)
 {
 	// listen socket의 특성을 client socket에 그대로 적용한다는 의미 //
-	return SetSocketOption(socket, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT, listenSocket);
+	return SetSocketOption<SOCKET>(socket, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT, listenSocket);
 }
 
 BOOL SocketUtils::Bind(SOCKET socket, NetworkAddress netAddr)

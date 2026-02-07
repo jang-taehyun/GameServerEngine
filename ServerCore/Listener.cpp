@@ -134,11 +134,9 @@ void Listener::ProcessAccept(AcceptEvent* acceptEvent)
 		return;
 	}
 
-	session->SetNetworkAddress(NetworkAddress(sockAddress));
-
 	std::cout << "Client Connected!!" << std::endl;
 
-	// TODO: 
-
+	session->SetNetworkAddress(NetworkAddress(sockAddress));
+	session->ProcessConnect();
 	RegisterAccept(acceptEvent);
 }

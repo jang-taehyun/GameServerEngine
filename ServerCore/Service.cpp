@@ -23,6 +23,7 @@ void Service::CloseService()
 SessionRef Service::CreateSession()
 {
 	SessionRef session = _sessionFactory();
+	session->SetService(shared_from_this());
 
 	if (false == _iocpCore->Register(session))
 		return nullptr;
