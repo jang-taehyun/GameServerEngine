@@ -4,6 +4,7 @@ enum class EventType : uint8
 {
 	NONE,
 	CONNECT,
+	DISCONNECT,
 	ACCEPT,
 	// PRERECV,		// -> 0 byte recv
 	RECV,
@@ -41,6 +42,17 @@ class ConnectEvent : public IOCPEvent
 {
 public:
 	ConnectEvent() : IOCPEvent(EventType::CONNECT) {}
+};
+
+
+/*-----------------------
+	 Disconnect Event
+-----------------------*/
+
+class DisconnectEvent : public IOCPEvent
+{
+public:
+	DisconnectEvent() : IOCPEvent(EventType::DISCONNECT) {}
 };
 
 

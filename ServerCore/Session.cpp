@@ -33,6 +33,11 @@ void Session::Send(BYTE* buffer, int32 len)
 	RegisterSend(sendEvent);
 }
 
+bool Session::Connect()
+{
+	return RegisterConnect();
+}
+
 void Session::Disconnect(const WCHAR* cause)
 {
 	if (false == _connected.exchange(false))
@@ -42,8 +47,9 @@ void Session::Disconnect(const WCHAR* cause)
 	std::wcout << "Disconnect : " << cause << std::endl;
 
 	OnDisconnected();	// 컨텐츠 코드에서 오버로딩
-	SocketUtils::Close(_socket);
 	GetService()->ReleaseSession(GetSessionRef());
+
+	RegisterDisconnect();
 }
 
 HANDLE Session::GetHandle()
@@ -59,6 +65,10 @@ void Session::Dispatch(IOCPEvent* iocpEvent, int32 numOfBytes)
 		ProcessConnect();
 		break;
 
+	case EventType::DISCONNECT:
+		ProcessDisconnect();
+		break;
+
 	case EventType::RECV:
 		ProcessRecv(numOfBytes);
 		break;
@@ -72,9 +82,57 @@ void Session::Dispatch(IOCPEvent* iocpEvent, int32 numOfBytes)
 	}
 }
 
-void Session::RegisterConnect()
+bool Session::RegisterConnect()
 {
-	
+	if (IsConnected())
+		return false;
+
+	if (ServiceType::CLIENT != GetService()->GetServiceType())
+		return false;
+
+	if (false == SocketUtils::SetReuseAddress(_socket, TRUE))
+		return false;
+
+	// ConnectEx() 함수를 호출할 때는 포트 번호를 0으로 만들어줘야 한다.
+	// -> 0의 의미 : 남는 포트 중 아무거나 할당해달라는 의미
+	if (false == SocketUtils::BindAnyAddress(_socket, /*남는 포트 아무거나*/ 0))
+		return false;
+
+	_connectEvent.Init();
+	_connectEvent.owner = shared_from_this();	// ADD_REF
+
+	DWORD numOfBytes = 0;
+	SOCKADDR_IN sockAddr = GetService()->GetNetAddress().GetSocketAddress();
+
+	if (FALSE == SocketUtils::ConnectEx(_socket, reinterpret_cast<const SOCKADDR*>(&sockAddr), sizeof(sockAddr), nullptr, 0, &numOfBytes, &_connectEvent))
+	{
+		int32 errorCode = ::WSAGetLastError();
+		if (WSA_IO_PENDING != errorCode)
+		{
+			_connectEvent.owner = nullptr;	// RELEASE_REF
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool Session::RegisterDisconnect()
+{
+	_disconnectEvent.Init();
+	_disconnectEvent.owner = shared_from_this();		// ADD_REF
+
+	if (FALSE == SocketUtils::DisconnectEx(_socket, &_disconnectEvent, TF_REUSE_SOCKET, 0))
+	{
+		int32 errorCode = ::WSAGetLastError();
+		if (WSA_IO_PENDING != errorCode)
+		{
+			_disconnectEvent.owner = nullptr;			// RELEASE_REF
+			return false;
+		}
+	}
+
+	return true;
 }
 
 void Session::RegisterRecv()
@@ -129,6 +187,7 @@ void Session::RegisterSend(SendEvent* sendEvent)
 
 void Session::ProcessConnect()
 {
+	_connectEvent.owner = nullptr;	// RELEASE_REF
 	_connected.store(true);
 
 	// session 등록 //
@@ -139,6 +198,11 @@ void Session::ProcessConnect()
 
 	// 수신 등록 //
 	RegisterRecv();
+}
+
+void Session::ProcessDisconnect()
+{
+	_disconnectEvent.owner = nullptr;		// RELEASE_REF
 }
 
 void Session::ProcessRecv(int32 numOfBytes)

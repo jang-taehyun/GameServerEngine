@@ -1,9 +1,5 @@
 #include "pch.h"
 
-#include <atomic>
-#include <mutex>
-#include <future>
-#include <thread>
 #include <chrono>
 
 #include "ThreadManager.h"
@@ -13,6 +9,13 @@
 class GameSession : public Session
 {
 public:
+    virtual ~GameSession()
+    {
+        using namespace std;
+
+        cout << "~GameSession()" << endl;
+    }
+
     virtual int32 OnRecv(BYTE* buffer, int32 len) override
     {
         using namespace std;

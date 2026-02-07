@@ -63,7 +63,17 @@ ClientService::~ClientService()
 
 bool ClientService::Start()
 {
-	// TODO
+	if (false == CanStart())
+		return false;
+
+	const int32 sessionCount = GetMaxSessionCount();
+	for (int32 i = 0; i < sessionCount; ++i)
+	{
+		SessionRef session = CreateSession();
+		if (false == session->Connect())
+			return false;
+	}
+
 	return true;
 }
 
