@@ -3,6 +3,7 @@
 #include "IOCPCore.h"
 #include "IOCPEvent.h"
 #include "NetworkAddress.h"
+#include "RecvBuffer.h"
 
 
 /*---------------
@@ -14,6 +15,11 @@ class Session : public IOCPObject
 	friend class Listener;
 	friend class IOCPCore;
 	friend class Service;
+
+	enum
+	{
+		BUFFER_SIZE = 0x10000,		// 64KB
+	};
 
 public:
 	Session();
@@ -64,10 +70,6 @@ protected:
 	virtual void OnSend(int32 len) {}
 	virtual void OnDisconnected() {}
 
-public:
-	// TODO: TEMP
-	char _recvBuffer[1000] = { 0, };
-
 private:
 	std::weak_ptr<class Service> _service;
 	SOCKET _socket = INVALID_SOCKET;
@@ -78,6 +80,8 @@ private:
 	USE_LOCK;
 
 	/** TODO: 수신 관련 */
+	RecvBuffer _recvBuffer{ BUFFER_SIZE };
+
 	/** TODO: 송신 관련 */
 
 private:
