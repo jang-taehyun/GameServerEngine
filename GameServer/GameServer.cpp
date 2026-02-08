@@ -5,38 +5,13 @@
 #include "ThreadManager.h"
 #include "Service.h"
 #include "Session.h"
-
-class GameSession : public Session
-{
-public:
-    virtual ~GameSession()
-    {
-        using namespace std;
-
-        cout << "~GameSession()" << endl;
-    }
-
-    virtual int32 OnRecv(BYTE* buffer, int32 len) override
-    {
-        using namespace std;
-
-        // Echo
-        cout << "OnRecv len : " << len << endl;
-        Send(buffer, len);
-        return len;
-    }
-
-    virtual void OnSend(int32 len) override
-    {
-        using namespace std;
-
-        // Echo
-        cout << "OnSend len : " << len << endl;
-    }
-};
+#include "GameSessionManager.h"
+#include "GameSession.h"
 
 int main()
 {
+    GSessionManager = new GameSessionManager;
+
     ServerServiceRef service{ MakeShared<ServerService>(
         NetworkAddress(L"127.0.0.1", 7777),
         MakeShared<IOCPCore>(),
@@ -60,6 +35,8 @@ int main()
     }
 
     GThreadManager->Join();
+
+    delete GSessionManager;
 
     return 0;
 }

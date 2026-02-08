@@ -5,9 +5,6 @@ class CoreGlobal
 public:
 	CoreGlobal();
 	~CoreGlobal();
-
-private:
-
 };
 
 extern			CoreGlobal			GCoreGlobal;

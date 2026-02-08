@@ -32,10 +32,6 @@ private:
 	// Lock 이름 -> Lock ID //
 	unordered_map<int32, const char*>	_IDToName;
 
-	// 현재까지 등록된 lock의 모음(Lock이 실행되는 것을 추적) //
-	// -> 추후 TLS로 빠질 예정
-	stack<int32>						_lockStack;
-
 	// Lock의 history(간선 정보) //
 	map<int32, set<int32>>				_lockHistory;	// 어떤 lock이 몇 번째 lock을 잡았는지 기록
 

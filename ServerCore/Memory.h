@@ -38,7 +38,7 @@ private:
 
 	// 메모리 풀을 상수 시간(O(1)) 안에 찾기 위한 helper 테이블 //
 	// 메모리 크기 <-> 메모리 풀
-	MemoryPool* _poolTable[MAX_ALLOC_SIZE + 1];
+	MemoryPool* _poolTable[MAX_ALLOC_SIZE + 1] = { nullptr, };
 };
 
 

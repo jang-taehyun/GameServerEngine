@@ -12,7 +12,6 @@ Memory::Memory()
 	int32 tableIndex = 1;
 
 	_pools.reserve(MAX_ALLOC_SIZE + 1);
-	_poolTable[0] = nullptr;
 
 	// pool »ý¼º
 	CreateMemoryPool(0, 1024, 32, tableIndex);

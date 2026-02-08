@@ -27,7 +27,7 @@ public:
 
 public:
 	/** 인터페이스 */
-	void Send(BYTE* buffer, int32 len);
+	void Send(SendBufferRef sendBuffer);
 	bool Connect();
 	void Disconnect(const WCHAR* cause);
 
@@ -53,12 +53,12 @@ private:
 	bool RegisterConnect();
 	bool RegisterDisconnect();
 	void RegisterRecv();
-	void RegisterSend(SendEvent* sendEvent);
+	void RegisterSend();
 
 	void ProcessConnect();
 	void ProcessDisconnect();
 	void ProcessRecv(int32 numOfBytes);
-	void ProcessSend(SendEvent* sendEvent, int32 numOfBytes);
+	void ProcessSend(int32 numOfBytes);
 
 	/** 에러 처리 */
 	void HandleError(int32 errorCode);
@@ -83,11 +83,14 @@ private:
 	RecvBuffer _recvBuffer{ BUFFER_SIZE };
 
 	/** TODO: 송신 관련 */
+	Queue<SendBufferRef> _sendQueue;
+	Atomic<bool> _sendRegistered = false;
 
 private:
 	/** IOCP event 재사용 */
 	ConnectEvent _connectEvent;
 	DisconnectEvent _disconnectEvent;
 	RecvEvent _recvEvent;
+	SendEvent _sendEvent;
 };
 

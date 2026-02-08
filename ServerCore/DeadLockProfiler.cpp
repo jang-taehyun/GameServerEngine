@@ -26,10 +26,10 @@ void DeadLockProfiler::PushLock(const char* name)
 	}
 
 	// 기존에 잡고 있는 락이 있다면
-	if (false == _lockStack.empty())
+	if (false == LLockStack.empty())
 	{
 		// 기존에 발견되지 않은 케이스라면 데드락 여부 다시 확인
-		const int32 prevID = _lockStack.top();
+		const int32 prevID = LLockStack.top();
 		if (prevID != lockID)
 		{
 			// 새로운 간선을 발견했다면, cycle이 생기는지 검사
@@ -46,7 +46,7 @@ void DeadLockProfiler::PushLock(const char* name)
 	}
 
 	// lock 등록 //
-	_lockStack.push(lockID);
+	LLockStack.push(lockID);
 }
 
 void DeadLockProfiler::PopLock(const char* name)
@@ -54,15 +54,15 @@ void DeadLockProfiler::PopLock(const char* name)
 	LockGuard guard(_lock);
 
 	// 여러번 unlock을 시도
-	if (_lockStack.empty())
+	if (LLockStack.empty())
 		CRASH("MULTIPLE_UNLOCK");
 
 	// pop 순서가 꼬인 경우
 	int32 lockID = _nameToID[name];
-	if (_lockStack.top() != lockID)
+	if (LLockStack.top() != lockID)
 		CRASH("INVALID_UNLOCK");
 
-	_lockStack.pop();
+	LLockStack.pop();
 }
 
 void DeadLockProfiler::CheckCycle()
