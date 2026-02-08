@@ -3,6 +3,7 @@
 #include "Types.h"
 #include "Allocator.h"
 
+#include <array>
 #include <vector>
 #include <list>
 #include <deque>
@@ -17,6 +18,7 @@
 
 #include <string>
 
+using std::array;
 using std::vector;
 using std::list;
 using std::deque;
@@ -31,6 +33,9 @@ using std::unordered_map;
 using std::unordered_set;
 
 using std::basic_string;
+
+template<typename T, uint32 Size>
+using Array = array<T, Size>;
 
 template<typename Type>
 using Vector = vector<Type, STLAllocator<Type>>;

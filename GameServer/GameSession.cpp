@@ -26,12 +26,11 @@ int32 GameSession::OnRecv(BYTE* buffer, int32 len)
     // Echo
     cout << "OnRecv len : " << len << endl;
 
-    SendBufferRef sendBuffer = MakeShared<SendBuffer>(4096);
-    sendBuffer->CopyData(buffer, len);
-    // Send(sendBuffer);
+    SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
+    ::memcpy(sendBuffer->Buffer(), buffer, len);
+    sendBuffer->Close(len);
 
-    for (int32 i = 0; i < 5; ++i)
-        GSessionManager->BroadCast(sendBuffer);
+    GSessionManager->BroadCast(sendBuffer);
 
     return len;
 }

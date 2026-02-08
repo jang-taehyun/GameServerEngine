@@ -11,3 +11,4 @@ extern			CoreGlobal			GCoreGlobal;
 extern class	ThreadManager*		GThreadManager;
 extern class	DeadLockProfiler*	GDeadlockProfiler;
 extern class	Memory*				GMemory;
+extern class	SendBufferManager*	GSendBufferManager;
