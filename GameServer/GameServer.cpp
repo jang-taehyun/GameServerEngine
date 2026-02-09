@@ -7,6 +7,7 @@
 #include "Session.h"
 #include "GameSessionManager.h"
 #include "GameSession.h"
+#include "BufferWriter.h"
 
 int main()
 {
@@ -39,13 +40,16 @@ int main()
     {
         SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
 
-        BYTE* buffer = sendBuffer->Buffer();
+        BufferWriter bw{ sendBuffer->Buffer(), sendBuffer->AllocSize() };
+        PacketHeader* header = bw.Reserve<PacketHeader>();
 
-        // packet에 header 집어넣기 //
-        reinterpret_cast<PacketHeader*>(buffer)->size = sizeof(PacketHeader) + sizeof(sendData);
+        // ID(uint64), 체력(uint32), 공격력(uint16)
+        bw << (uint64)1001 << (uint32)100 << (uint16)10;
+        bw.Write(sendData, sizeof(sendData));
 
-        ::memcpy((buffer + sizeof(PacketHeader)), sendData, sizeof(sendData));
-        sendBuffer->Close(sizeof(PacketHeader) + sizeof(sendData));
+        header->size = bw.WriteSize();
+        header->ID = PacketHeader::ProtocolID::HELLO_WORLD;
+        sendBuffer->Close(bw.WriteSize());
 
         GSessionManager->BroadCast(sendBuffer);
 

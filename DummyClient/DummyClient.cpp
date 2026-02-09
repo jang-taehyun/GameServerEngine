@@ -5,6 +5,7 @@
 #include "ThreadManager.h"
 #include "Service.h"
 #include "Session.h"
+#include "BufferReader.h"
 
 char sendData[12] = "Hello World";
 
@@ -14,60 +15,47 @@ public:
     virtual ~ServerSession()
     {
         using namespace std;
-
         cout << "~ServerSession()" << endl;
     }
 
     virtual void OnConnected() override
     {
         // using namespace std;
-        // 
         // cout << "Connected To Server!!" << endl;
-        // 
-        // SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
-        // ::memcpy(sendBuffer->Buffer(), sendData, sizeof(sendData));
-        // sendBuffer->Close(sizeof(sendData));
-        // 
-        // Send(sendBuffer);
     }
 
     virtual int32 OnRecvPacket(BYTE* buffer, int32 len) override
     {
         using namespace std;
-        PacketHeader header = *(reinterpret_cast<PacketHeader*>(buffer));
-        // cout << "Packet ID : " << (uint16)header.ID << "Size : " << header.size << endl;
 
+        BufferReader br{ buffer, (uint32)len };
+        PacketHeader header;
+        br >> header;
+
+        uint64 ID = 0;
+        uint32 hp = 0;
+        uint16 attack = 0;
+        br >> ID >> hp >> attack;
+
+        cout << "ID : " << ID << ", hp : " << hp << ", attack : " << attack << endl;
         char recvBuffer[0x1000] = { 0, };
-        ::memcpy(recvBuffer, (buffer + sizeof(PacketHeader)), (header.size - sizeof(PacketHeader)));
-        cout << recvBuffer << endl;
-
-        // Echo
-        // cout << "OnRecv len : " << len << endl;
-
-        // this_thread::sleep_for(1s);
-        // 
-        // SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
-        // ::memcpy(sendBuffer->Buffer(), sendData, sizeof(sendData));
-        // sendBuffer->Close(sizeof(sendData));
-        // 
-        // Send(sendBuffer);
+        br.Read(recvBuffer, header.size - sizeof(PacketHeader) - sizeof(uint64) - sizeof(uint32) - sizeof(uint16));
+        cout << "recv str : " << recvBuffer << endl;
 
         return len;
     }
 
     virtual void OnSend(int32 len) override
     {
-        using namespace std;
-
         // Echo
+        // using namespace std;
         // cout << "OnSend len : " << len << endl;
     }
 
     virtual void OnDisconnected() override
     {
-        using namespace std;
-
         // Echo
+        // using namespace std;
         // cout << "Disconnected!" << endl;
     }
 };

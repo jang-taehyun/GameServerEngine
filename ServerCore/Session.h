@@ -107,7 +107,7 @@ private:
 * - size는 header를 포함한 전체 packet의 길이를 의미
 */
 
-class PacketHeader
+struct PacketHeader
 {
 	enum class ProtocolID : uint16
 	{
@@ -115,7 +115,6 @@ class PacketHeader
 		HELLO_WORLD = 1,
 	};
 
-public:
 	int16 size = 0;
 	ProtocolID ID = ProtocolID::NONE;
 };
