@@ -5,7 +5,8 @@
 #include "ThreadManager.h"
 #include "Service.h"
 #include "Session.h"
-#include "BufferReader.h"
+
+#include "ClientPacketHandler.h"
 
 char sendData[12] = "Hello World";
 
@@ -24,25 +25,9 @@ public:
         // cout << "Connected To Server!!" << endl;
     }
 
-    virtual int32 OnRecvPacket(BYTE* buffer, int32 len) override
+    virtual void OnRecvPacket(BYTE* buffer, int32 len) override
     {
-        using namespace std;
-
-        BufferReader br{ buffer, (uint32)len };
-        PacketHeader header;
-        br >> header;
-
-        uint64 ID = 0;
-        uint32 hp = 0;
-        uint16 attack = 0;
-        br >> ID >> hp >> attack;
-
-        cout << "ID : " << ID << ", hp : " << hp << ", attack : " << attack << endl;
-        char recvBuffer[0x1000] = { 0, };
-        br.Read(recvBuffer, header.size - sizeof(PacketHeader) - sizeof(uint64) - sizeof(uint32) - sizeof(uint16));
-        cout << "recv str : " << recvBuffer << endl;
-
-        return len;
+        ClientPacketHandler::HandlePacket(buffer, len);
     }
 
     virtual void OnSend(int32 len) override
@@ -69,7 +54,7 @@ int main()
         NetworkAddress(L"127.0.0.1", 7777),
         MakeShared<IOCPCore>(),
         MakeShared<ServerSession>,                // TODO: Session manager µî
-        1000
+        1
     ) };
 
     ASSERT_CRASH(service->Start());

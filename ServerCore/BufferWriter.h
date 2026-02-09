@@ -33,17 +33,13 @@ public:
 	}
 
 	template<typename T>
-	BufferWriter& operator<<(const T& src)
-	{
-		*(reinterpret_cast<T*>(&_buffer[_pos])) = src;
-		_pos += sizeof(T);
-		return *this;
-	}
-
-	template<typename T>
 	BufferWriter& operator<<(T&& src)
 	{
-		*(reinterpret_cast<T*>(&_buffer[_pos])) = std::move(src);
+		// 레퍼런스를 빼겠다는 의미 //
+		// const int32& 를 const int32로 바꾼다.
+		using DataType = std::remove_reference_t<T>;
+
+		*(reinterpret_cast<DataType*>(&_buffer[_pos])) = std::forward<DataType>(src);
 		_pos += sizeof(T);
 		return *this;
 	}

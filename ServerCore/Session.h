@@ -116,7 +116,8 @@ struct PacketHeader
 	};
 
 	int16 size = 0;
-	ProtocolID ID = ProtocolID::NONE;
+	// ProtocolID ID = ProtocolID::NONE;
+	uint32 ID = 0;
 };
 
 class PacketSession : public Session
@@ -129,5 +130,5 @@ public:
 
 protected:
 	virtual int32 OnRecv(BYTE* buffer, int32 len) final;
-	virtual int32 OnRecvPacket(BYTE* buffer, int32 len) = 0;
+	virtual void OnRecvPacket(BYTE* buffer, int32 len) = 0;
 };

@@ -8,6 +8,7 @@
 #include "GameSessionManager.h"
 #include "GameSession.h"
 #include "BufferWriter.h"
+#include "ServerPacketHandler.h"
 
 int main()
 {
@@ -38,18 +39,12 @@ int main()
     char sendData[1000] = "Hello World";
     while (true)
     {
-        SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
-
-        BufferWriter bw{ sendBuffer->Buffer(), sendBuffer->AllocSize() };
-        PacketHeader* header = bw.Reserve<PacketHeader>();
-
-        // ID(uint64), 체력(uint32), 공격력(uint16)
-        bw << (uint64)1001 << (uint32)100 << (uint16)10;
-        bw.Write(sendData, sizeof(sendData));
-
-        header->size = bw.WriteSize();
-        header->ID = PacketHeader::ProtocolID::HELLO_WORLD;
-        sendBuffer->Close(bw.WriteSize());
+        std::vector<BuffData> buffs{
+            BuffData{100, 1.5f},
+            BuffData{200, 2.3f},
+            BuffData{300, 0.7f}
+        };
+        SendBufferRef sendBuffer = ServerPacketHandler::Make_S_TEST(1001, 100, 10, buffs);
 
         GSessionManager->BroadCast(sendBuffer);
 

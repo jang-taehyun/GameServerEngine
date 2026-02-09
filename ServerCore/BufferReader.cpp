@@ -30,7 +30,7 @@ bool BufferReader::Peek(OUT void* dest, uint32 len)
 
 bool BufferReader::Read(OUT void* dest, uint32 len)
 {
-	if (Peek(dest, len) < len)
+	if (false == Peek(dest, len))
 		return false;
 
 	_pos += len;
