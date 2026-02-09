@@ -34,6 +34,25 @@ int main()
         );
     }
 
+    char sendData[1000] = "Hello World";
+    while (true)
+    {
+        SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
+
+        BYTE* buffer = sendBuffer->Buffer();
+
+        // packet에 header 집어넣기 //
+        reinterpret_cast<PacketHeader*>(buffer)->size = sizeof(PacketHeader) + sizeof(sendData);
+
+        ::memcpy((buffer + sizeof(PacketHeader)), sendData, sizeof(sendData));
+        sendBuffer->Close(sizeof(PacketHeader) + sizeof(sendData));
+
+        GSessionManager->BroadCast(sendBuffer);
+
+        using std::chrono::operator""ms;
+        std::this_thread::sleep_for(250ms);
+    }
+
     GThreadManager->Join();
 
     delete GSessionManager;

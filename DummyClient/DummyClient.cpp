@@ -8,7 +8,7 @@
 
 char sendData[12] = "Hello World";
 
-class ServerSession : public Session
+class ServerSession : public PacketSession
 {
 public:
     virtual ~ServerSession()
@@ -20,31 +20,37 @@ public:
 
     virtual void OnConnected() override
     {
-        using namespace std;
-
-        cout << "Connected To Server!!" << endl;
-        
-        SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
-        ::memcpy(sendBuffer->Buffer(), sendData, sizeof(sendData));
-        sendBuffer->Close(sizeof(sendData));
-
-        Send(sendBuffer);
+        // using namespace std;
+        // 
+        // cout << "Connected To Server!!" << endl;
+        // 
+        // SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
+        // ::memcpy(sendBuffer->Buffer(), sendData, sizeof(sendData));
+        // sendBuffer->Close(sizeof(sendData));
+        // 
+        // Send(sendBuffer);
     }
 
-    virtual int32 OnRecv(BYTE* buffer, int32 len) override
+    virtual int32 OnRecvPacket(BYTE* buffer, int32 len) override
     {
         using namespace std;
+        PacketHeader header = *(reinterpret_cast<PacketHeader*>(buffer));
+        // cout << "Packet ID : " << (uint16)header.ID << "Size : " << header.size << endl;
+
+        char recvBuffer[0x1000] = { 0, };
+        ::memcpy(recvBuffer, (buffer + sizeof(PacketHeader)), (header.size - sizeof(PacketHeader)));
+        cout << recvBuffer << endl;
 
         // Echo
-        cout << "OnRecv len : " << len << endl;
+        // cout << "OnRecv len : " << len << endl;
 
-        this_thread::sleep_for(1s);
-
-        SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
-        ::memcpy(sendBuffer->Buffer(), sendData, sizeof(sendData));
-        sendBuffer->Close(sizeof(sendData));
-
-        Send(sendBuffer);
+        // this_thread::sleep_for(1s);
+        // 
+        // SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
+        // ::memcpy(sendBuffer->Buffer(), sendData, sizeof(sendData));
+        // sendBuffer->Close(sizeof(sendData));
+        // 
+        // Send(sendBuffer);
 
         return len;
     }
@@ -54,7 +60,7 @@ public:
         using namespace std;
 
         // Echo
-        cout << "OnSend len : " << len << endl;
+        // cout << "OnSend len : " << len << endl;
     }
 
     virtual void OnDisconnected() override
@@ -62,7 +68,7 @@ public:
         using namespace std;
 
         // Echo
-        cout << "Disconnected!" << endl;
+        // cout << "Disconnected!" << endl;
     }
 };
 
@@ -75,7 +81,7 @@ int main()
         NetworkAddress(L"127.0.0.1", 7777),
         MakeShared<IOCPCore>(),
         MakeShared<ServerSession>,                // TODO: Session manager µî
-        5
+        1000
     ) };
 
     ASSERT_CRASH(service->Start());

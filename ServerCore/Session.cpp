@@ -19,12 +19,22 @@ Session::~Session()
 
 void Session::Send(SendBufferRef sendBuffer)
 {
-	// 현재 RegisterSend()가 걸리지 않는 상태라면, 걸어준다.
-	WRITE_LOCK;
+	if (false == IsConnected())
+		return;
 
-	_sendQueue.push(sendBuffer);
+	bool registerSend = false;
 
-	if (false == _sendRegistered.exchange(true))
+	{
+		// 현재 RegisterSend()가 걸리지 않는 상태라면, 걸어준다.
+		WRITE_LOCK;
+
+		_sendQueue.push(sendBuffer);
+
+		if (false == _sendRegistered.exchange(true))
+			registerSend = true;
+	}
+
+	if (registerSend)
 		RegisterSend();
 }
 
@@ -40,9 +50,6 @@ void Session::Disconnect(const WCHAR* cause)
 
 	// TODO: TEMP
 	std::wcout << "Disconnect : " << cause << std::endl;
-
-	OnDisconnected();	// 컨텐츠 코드에서 오버로딩
-	GetService()->ReleaseSession(GetSessionRef());
 
 	RegisterDisconnect();
 }
@@ -183,7 +190,7 @@ void Session::RegisterSend()
 		}
 	}
 
-	// Scatter-Gather 패턴을 이용해 흩어져 있는 데이터들을 모아서 한 방에 보낸다.
+	// Scatter-Gather (흩어져 있는 데이터들을 모아서 한 방에 보낸다.)
 	Vector<WSABUF> wsaBufs;
 	wsaBufs.reserve(_sendEvent.sendBuffers.size());
 	for (SendBufferRef sendBuffer : _sendEvent.sendBuffers)
@@ -203,7 +210,7 @@ void Session::RegisterSend()
 			HandleError(errorCode);
 			_sendEvent.owner = nullptr;		// RELEASE_REF
 			_sendEvent.sendBuffers.clear();	// RELEASE_REF
-			_sendRegistered.exchange(false);
+			_sendRegistered.store(false);
 		}
 	}
 }
@@ -226,6 +233,9 @@ void Session::ProcessConnect()
 void Session::ProcessDisconnect()
 {
 	_disconnectEvent.owner = nullptr;		// RELEASE_REF
+
+	OnDisconnected();	// 컨텐츠 코드에서 오버로딩
+	GetService()->ReleaseSession(GetSessionRef());
 }
 
 void Session::ProcessRecv(int32 numOfBytes)
@@ -294,4 +304,46 @@ void Session::HandleError(int32 errorCode)
 		std::cout << "Handle Error : " << errorCode << std::endl;
 		break;
 	}
+}
+
+
+/*---------------------
+	 Packet Session
+---------------------*/
+
+PacketSession::PacketSession()
+{
+
+}
+
+PacketSession::~PacketSession()
+{
+
+}
+
+int32 PacketSession::OnRecv(BYTE* buffer, int32 len)
+{
+	int32 processLen = 0;
+
+	while (true)
+	{
+		int32 dataSize = len - processLen;
+
+		// 최소한 header는 파싱할 수 있어야 한다!!
+		if (dataSize < sizeof(PacketHeader))
+			break;
+
+		PacketHeader header = *(reinterpret_cast<PacketHeader*>(&buffer[processLen]));
+
+		// header에 기록된 packet의 크기를 파싱 //
+		if (dataSize < header.size)
+			break;
+
+		// packet 조립 성공 //
+		OnRecvPacket(buffer, header.size);
+
+		processLen += header.size;
+	}
+
+	return processLen;
 }

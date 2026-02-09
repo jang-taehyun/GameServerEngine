@@ -94,3 +94,41 @@ private:
 	SendEvent _sendEvent;
 };
 
+
+/*---------------------
+	 Packet Session
+---------------------*/
+
+/*
+* 우리 만의 프로토콜 정의
+* - 데이터 앞에 header를 붙인다.
+* - header의 구조
+*	[size(2byte)][ID(2byte)][data....]
+* - size는 header를 포함한 전체 packet의 길이를 의미
+*/
+
+class PacketHeader
+{
+	enum class ProtocolID : uint16
+	{
+		NONE = 0,
+		HELLO_WORLD = 1,
+	};
+
+public:
+	int16 size = 0;
+	ProtocolID ID = ProtocolID::NONE;
+};
+
+class PacketSession : public Session
+{
+public:
+	PacketSession();
+	virtual ~PacketSession();
+
+	PacketSessionRef GetPacketSessionRef() { return std::static_pointer_cast<PacketSession>(shared_from_this()); }
+
+protected:
+	virtual int32 OnRecv(BYTE* buffer, int32 len) final;
+	virtual int32 OnRecvPacket(BYTE* buffer, int32 len) = 0;
+};
