@@ -49,8 +49,10 @@ struct PKT_S_TEST
     bool IsValidate()
     {
         uint32 size = 0;
-
         size += sizeof(PKT_S_TEST);
+        if (size > packetSize)
+            return false;
+
         size += sizeof(BuffListItem) * buffsCount;
 
         // packet의 전체 크기 검사 //
@@ -63,6 +65,14 @@ struct PKT_S_TEST
 
         return true;
     }
+
+    using BuffsList = PacketList<PKT_S_TEST::BuffListItem>;
+    BuffsList GetBuffsList()
+    {
+        BYTE* data = reinterpret_cast<BYTE*>(this);
+        data += buffsOffset;
+        return BuffsList(reinterpret_cast<BuffListItem*>(data), buffsCount);
+    }
 };
 #pragma pack()
 
@@ -70,27 +80,25 @@ void ClientPacketHandler::Handle_S_TEST(BYTE* buffer, int32 len)
 {
     using namespace std;
 
-    if (sizeof(PKT_S_TEST) > len)
-        return;
-    
     BufferReader br{ buffer, (uint32)len };
-    PKT_S_TEST pkt;
-    br >> pkt;
+    PKT_S_TEST* pkt = reinterpret_cast<PKT_S_TEST*>(buffer);
 
-    if (false == pkt.IsValidate())
+    if (false == pkt->IsValidate())
         return;
 
     // cout << "ID : " << ID << ", hp : " << hp << ", attack : " << attack << endl;
 
-    std::vector<PKT_S_TEST::BuffListItem> buffs(pkt.buffsCount);
-    uint16 buffCount = pkt.buffsCount;
+    PKT_S_TEST::BuffsList buffs = pkt->GetBuffsList();
 
-    for (int32 i = 0; i < buffCount; ++i)
-        br >> buffs[i];
+    cout << "BufCount : " << buffs.Count() << endl;
+    for (int32 i = 0; i < buffs.Count(); ++i)
+        cout << "BufInfo : " << buffs[i].buffID << ", " << buffs[i].remainTime << endl;
 
-    cout << "BufCount : " << buffCount << endl;
-    for (PKT_S_TEST::BuffListItem& buf : buffs)
-        cout << "BufInfo : " << buf.buffID << ", " << buf.remainTime << endl;
+    for (auto it = buffs.begin(); it != buffs.end(); ++it)
+        cout << "BufInfo : " << it->buffID << ", " << it->remainTime << endl;
+
+    for (auto& buff : buffs)
+        cout << "BufInfo : " << buff.buffID << ", " << buff.remainTime << endl;
 }
 
 // packet 설계시 반드시 명심해야 하는 법칙 //
