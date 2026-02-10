@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "ServerPacketHandler.h"
 #include "Session.h"
-#include "BufferReader.h"
-#include "BufferWriter.h"
 
 void ServerPacketHandler::HandlePacket(BYTE* buffer, int32 len)
 {
@@ -15,41 +13,4 @@ void ServerPacketHandler::HandlePacket(BYTE* buffer, int32 len)
 	default:
 		break;
 	}
-}
-
-SendBufferRef ServerPacketHandler::Make_S_TEST(uint64 ID, uint32 HP, uint16 attack, std::vector<BuffData> buffs, std::wstring name)
-{
-	SendBufferRef sendBuffer = GSendBufferManager->Open(4096);
-
-	BufferWriter bw{ sendBuffer->Buffer(), sendBuffer->AllocSize() };
-	PacketHeader* header = bw.Reserve<PacketHeader>();
-
-	// ID(uint64), 체력(uint32), 공격력(uint16)
-	bw << ID << HP << attack;
-	
-	{
-		// -- 가변 데이터 -- //
-		struct ListHeader
-		{
-			uint16 offset = 0;
-			uint16 count = 0;
-		};
-
-		ListHeader* buffsHeader = bw.Reserve<ListHeader>();
-		buffsHeader->count = buffs.size();
-		buffsHeader->offset = bw.WriteSize();
-
-		for (BuffData& buff : buffs)
-		{
-			bw << buff;
-		}
-		// ----------------- //
-	}
-
-	header->size = bw.WriteSize();
-	header->ID = S_TEST;			// 1 : Test Msg
-
-	sendBuffer->Close(bw.WriteSize());
-
-	return sendBuffer;
 }

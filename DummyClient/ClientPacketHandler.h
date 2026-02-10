@@ -20,6 +20,10 @@ private:
 };
 
 
+/*-----------------------
+	 Packet Iterator
+-----------------------*/
+
 template<typename T, typename C>
 class PacketIterator
 {
@@ -37,6 +41,11 @@ private:
 	C& _container;
 	uint16 _index;
 };
+
+
+/*-------------------
+	 Packet List
+-------------------*/
 
 template<typename T>
 class PacketList

@@ -22,13 +22,13 @@ public:
 	bool Write(void* src, uint32 len);
 
 	template<typename T>
-	T* Reserve()
+	T* Reserve(uint16 count = 1)
 	{
-		if (FreeSize() < sizeof(T))
+		if (FreeSize() < (sizeof(T) * count))
 			return nullptr;
 
 		T* ret = reinterpret_cast<T*>(&_buffer[_pos]);
-		_pos += sizeof(T);
+		_pos += (sizeof(T) * count);
 		return ret;
 	}
 

@@ -44,12 +44,13 @@ int main()
 
     while (true)
     {
-        std::vector<BuffData> buffs{
-            BuffData{100, 1.5f},
-            BuffData{200, 2.3f},
-            BuffData{300, 0.7f}
-        };
-        SendBufferRef sendBuffer = ServerPacketHandler::Make_S_TEST(1001, 100, 10, buffs, L"¾È³çÇÏ¼¼¿ä");
+        PKT_S_TEST_WRITE pktWriter{ 1001,100,10 };
+        PKT_S_TEST_WRITE::BuffsList buffList{ pktWriter.ReserveBuffsList(3) };
+        buffList[0] = { 100, 1.5f };
+        buffList[1] = { 200, 2.3f };
+        buffList[2] = { 300, 0.7f };
+
+        SendBufferRef sendBuffer = pktWriter.CloseAndReturn();
 
         GSessionManager->BroadCast(sendBuffer);
 
