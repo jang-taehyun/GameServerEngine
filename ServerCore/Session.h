@@ -109,15 +109,15 @@ private:
 
 struct PacketHeader
 {
-	enum class ProtocolID : uint16
-	{
-		NONE = 0,
-		HELLO_WORLD = 1,
-	};
+	//enum class ProtocolID : uint16
+	//{
+	//	NONE = 0,
+	//	HELLO_WORLD = 1,
+	//};
 
-	int16 size = 0;
+	uint16 size = 0;
 	// ProtocolID ID = ProtocolID::NONE;
-	uint32 ID = 0;
+	uint16 ID = 0;
 };
 
 class PacketSession : public Session

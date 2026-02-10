@@ -5,6 +5,7 @@ enum
     S_TEST = 1,
 };
 
+#pragma pack(1)
 // 패킷 설계 TEMP
 struct BuffData
 {
@@ -19,9 +20,9 @@ struct S_TEST
     uint16 attack = 0;
 
     // 가변 데이터
-    std::vector<BuffData> buffs;
+    // std::vector<BuffData> buffs;
 };
-
+#pragma pack()
 
 /*-----------------------------
      Server Packet Handler
