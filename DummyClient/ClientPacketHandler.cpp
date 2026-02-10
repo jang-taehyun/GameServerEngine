@@ -39,6 +39,8 @@ struct S_TEST
 
     // 가변 데이터
     std::vector<BuffData> buffs;
+
+    std::wstring name;
 };
 
 void ClientPacketHandler::Handle_S_TEST(BYTE* buffer, int32 len)
@@ -69,6 +71,17 @@ void ClientPacketHandler::Handle_S_TEST(BYTE* buffer, int32 len)
     for (BuffData& buf : buffs)
         cout << "BufInfo : " << buf.buffID << ", " << buf.remainTime << endl;
 
+    // 문자열 수신(UTF-16) //
+    wstring name;
+    uint16 nameLen = 0;
+    br >> nameLen;
+
+    name.resize(nameLen);
+    br.Read((void*)name.data(), nameLen * sizeof(WCHAR));
+    
+    // wcout의 언어 설정
+    wcout.imbue(std::locale("kor"));
+    wcout << name << endl;
 }
 
 // packet 설계시 반드시 명심해야 하는 법칙 //

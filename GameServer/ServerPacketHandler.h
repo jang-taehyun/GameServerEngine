@@ -32,5 +32,5 @@ class ServerPacketHandler
 public:
     static void HandlePacket(BYTE* buffer, int32 len);
 
-    static SendBufferRef Make_S_TEST(uint64 ID, uint32 HP, uint16 attack, std::vector<BuffData> buffs);
+    static SendBufferRef Make_S_TEST(uint64 ID, uint32 HP, uint16 attack, std::vector<BuffData> buffs, std::wstring name);
 };
