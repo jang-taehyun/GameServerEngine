@@ -10,6 +10,7 @@
 #include "GameSession.h"
 #include "BufferWriter.h"
 #include "ServerPacketHandler.h"
+#include "Protocol.pb.h"
 
 int main()
 {
@@ -37,46 +38,30 @@ int main()
         );
     }
 
-    char sendData1[1000] = "가";         // CP949 인코딩 사용
-    char sendData2[1000] = u8"가";       // UTF-8 인코딩 사용(u8을 앞에 붙이면 UTF-8 인코딩을 사용한다.)
     WCHAR sendData3[1000] = L"가";       // UTF-16 인코딩 사용(L을 앞에 붙이면 UTF-16 인코딩을 사용한다, C#과 궁합이 잘 맞아서 많이 사용한다)
-    TCHAR sendData4[1000] = _T("가");    // 환경에 따라 달라짐(유니코드를 사용하면 UTF-8를, 멀티바이트를 사용하면 CP949를 사용)
 
     while (true)
     {
-        // 현 시점 패킷 구조 : [ PKT_S_TEST ]
-        PKT_S_TEST_WRITE pktWriter{ 1001,100,10 };
+        Protocol::S_TEST pkt;
 
-        // 현 시점 패킷 구조 : [ PKT_S_TEST ][ BuffsListItem BuffsListItem BuffsListItem ... ]
-        PKT_S_TEST_WRITE::BuffsList buffList{ pktWriter.ReserveBuffsList(3) };
-        buffList[0] = { 100, 1.5f };
-        buffList[1] = { 200, 2.3f };
-        buffList[2] = { 300, 0.7f };
-
-        // 현 시점 패킷 구조 : [ PKT_S_TEST ][ BuffsListItem BuffsListItem BuffsListItem ... ][ victim victim ... ][ victim victim ... ]...[ victim victim ... ]
-        PKT_S_TEST_WRITE::BuffsVictimsList vic0 = pktWriter.ReserveBuffsVictimsList(&buffList[0], 3);
+        pkt.set_id(1000);
+        pkt.set_hp(100);
+        pkt.set_id(10);
         {
-            vic0[0] = 1000;
-            vic0[1] = 2000;
-            vic0[2] = 3000;
+            Protocol::BuffData* data = pkt.add_buffs();
+            data->set_buffid(100);
+            data->set_remaintime(1.2f);
+            data->add_victims(4000);
         }
-        PKT_S_TEST_WRITE::BuffsVictimsList vic1 = pktWriter.ReserveBuffsVictimsList(&buffList[1], 1);
         {
-            vic1[0] = 1000;
-        }
-        PKT_S_TEST_WRITE::BuffsVictimsList vic2 = pktWriter.ReserveBuffsVictimsList(&buffList[2], 2);
-        {
-            vic2[0] = 3000;
-            vic2[1] = 5000;
+            Protocol::BuffData* data = pkt.add_buffs();
+            data->set_buffid(200);
+            data->set_remaintime(2.5f);
+            data->add_victims(1000);
+            data->add_victims(2000);
         }
 
-        /**
-        * 현재 방법의 장단점
-        * - 장점 : 데이터를 바로 넣을 수 있다.
-        * - 단점 : 사용하기 불편하다.
-        */
-
-        SendBufferRef sendBuffer = pktWriter.CloseAndReturn();
+        SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
         GSessionManager->BroadCast(sendBuffer);
 
         using std::chrono::operator""ms;
@@ -91,8 +76,17 @@ int main()
 }
 
 /**
-* 직렬화(Serialization)
-* - 데이터들을 모아서 바이트 배열로 만드는 작업
-* 역직렬화
-* - 바이트 배열을 데이터로 복구하는 작업
+* protoBuf의 장점
+* - 안정적이다.(그래서 많이 사용하는듯)
+* - 다양한 방법으로 데이터를 채울 수 있다.
+* - 직렬화, 역직렬화하는 부분을 쉽게 처리할 수 있다.
+* - 다른 엔진에 연동할 때도 비슷하게 작업할 수 있다.
+* - 퍼블리셔와 통신하는 코드를 작성할 때 협업하기 편하다.
+*/
+
+/**
+* protoBuf, vcpkg 설치 참고 자료
+* 
+* https://minttea25.tistory.com/128
+* https://velog.io/@pikamon/CC-15
 */
