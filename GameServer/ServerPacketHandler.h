@@ -81,12 +81,20 @@ private:
 
 // 패킷 설계 TEMP
 #pragma pack(1)
+
+// 패킷 구조
+// [ PKT_S_TEST ][ BuffsListItem BuffsListItem BuffsListItem ... ][ victim victim ... ][ victim victim ... ]...[ victim victim ... ]
+
 struct PKT_S_TEST
 {
     struct BuffListItem
     {
         uint64 buffID = 0;
         float remainTime = 0.f;
+
+		// Victim List
+		uint16 victimsOffset = 0;
+		uint16 victimsCount = 0;
     };
 
     uint16 packetSize = 0;      // 공용 헤더(PacketHeader)
@@ -110,6 +118,7 @@ class PKT_S_TEST_WRITE
 public:
 	using BuffsListItem = PKT_S_TEST::BuffListItem;
 	using BuffsList = PacketList<PKT_S_TEST::BuffListItem>;
+	using BuffsVictimsList = PacketList<uint64>;
 
 	PKT_S_TEST_WRITE(uint64 ID, uint32 HP, uint16 attack)
 	{
@@ -126,8 +135,6 @@ public:
 
 		_pkt->buffsOffset = 0;		// To Fill
 		_pkt->buffsCount = 0;		// To Fill
-
-
 	}
 
 	BuffsList ReserveBuffsList(uint16 buffCount)
@@ -136,6 +143,14 @@ public:
 		_pkt->buffsOffset = (uint64)firstBuffsListItem - (uint64)_pkt;
 		_pkt->buffsCount = buffCount;
 		return BuffsList{ firstBuffsListItem, buffCount };
+	}
+
+	BuffsVictimsList ReserveBuffsVictimsList(BuffsListItem* buffsItem, uint16 victimsCount)
+	{
+		uint64* firstVictimsListItem = _bw.Reserve<uint64>(victimsCount);
+		buffsItem->victimsOffset = (uint64)firstVictimsListItem - (uint64)_pkt;
+		buffsItem->victimsCount = victimsCount;
+		return BuffsVictimsList{ firstVictimsListItem, victimsCount };
 	}
 
 	SendBufferRef CloseAndReturn()

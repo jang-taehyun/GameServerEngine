@@ -44,14 +44,39 @@ int main()
 
     while (true)
     {
+        // 현 시점 패킷 구조 : [ PKT_S_TEST ]
         PKT_S_TEST_WRITE pktWriter{ 1001,100,10 };
+
+        // 현 시점 패킷 구조 : [ PKT_S_TEST ][ BuffsListItem BuffsListItem BuffsListItem ... ]
         PKT_S_TEST_WRITE::BuffsList buffList{ pktWriter.ReserveBuffsList(3) };
         buffList[0] = { 100, 1.5f };
         buffList[1] = { 200, 2.3f };
         buffList[2] = { 300, 0.7f };
 
-        SendBufferRef sendBuffer = pktWriter.CloseAndReturn();
+        // 현 시점 패킷 구조 : [ PKT_S_TEST ][ BuffsListItem BuffsListItem BuffsListItem ... ][ victim victim ... ][ victim victim ... ]...[ victim victim ... ]
+        PKT_S_TEST_WRITE::BuffsVictimsList vic0 = pktWriter.ReserveBuffsVictimsList(&buffList[0], 3);
+        {
+            vic0[0] = 1000;
+            vic0[1] = 2000;
+            vic0[2] = 3000;
+        }
+        PKT_S_TEST_WRITE::BuffsVictimsList vic1 = pktWriter.ReserveBuffsVictimsList(&buffList[1], 1);
+        {
+            vic1[0] = 1000;
+        }
+        PKT_S_TEST_WRITE::BuffsVictimsList vic2 = pktWriter.ReserveBuffsVictimsList(&buffList[2], 2);
+        {
+            vic2[0] = 3000;
+            vic2[1] = 5000;
+        }
 
+        /**
+        * 현재 방법의 장단점
+        * - 장점 : 데이터를 바로 넣을 수 있다.
+        * - 단점 : 사용하기 불편하다.
+        */
+
+        SendBufferRef sendBuffer = pktWriter.CloseAndReturn();
         GSessionManager->BroadCast(sendBuffer);
 
         using std::chrono::operator""ms;

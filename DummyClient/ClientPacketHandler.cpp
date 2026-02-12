@@ -26,12 +26,31 @@ void ClientPacketHandler::HandlePacket(BYTE* buffer, int32 len)
 
 // 패킷 설계 TEMP
 #pragma pack(1)
+
+// 패킷 구조
+// [ PKT_S_TEST ][ BuffsListItem BuffsListItem BuffsListItem ... ][ victim victim ... ][ victim victim ... ]...[ victim victim ... ]
+
 struct PKT_S_TEST
 {
     struct BuffListItem
     {
         uint64 buffID = 0;
         float remainTime = 0.f;
+
+        // Victim List
+        uint16 victimsOffset = 0;
+        uint16 victimsCount = 0;
+
+        // 가변 길이 데이터(victims) 검사 //
+        bool Validate(BYTE* packetStart, uint16 packetSize, OUT uint32& size)
+        {
+            uint16 cmp = victimsOffset + (victimsCount * sizeof(uint64));
+            if (cmp > packetSize)
+                return false;
+
+            size += (victimsCount * sizeof(uint64));
+            return true;
+        }
     };
 
     uint16 packetSize = 0;      // 공용 헤더(PacketHeader)
@@ -43,9 +62,6 @@ struct PKT_S_TEST
     uint16 buffsOffset = 0;
     uint16 buffsCount = 0;
 
-    // std::vector<BuffData> buffs;
-    // std::wstring name;
-
     bool IsValidate()
     {
         uint32 size = 0;
@@ -53,14 +69,24 @@ struct PKT_S_TEST
         if (size > packetSize)
             return false;
 
-        size += sizeof(BuffListItem) * buffsCount;
-
-        // packet의 전체 크기 검사 //
-        if (size != packetSize)
-            return false;
+        // 가변 길이 데이터(buffs) 검사 //
 
         // offset 검사
         if (buffsOffset + (buffsCount * sizeof(BuffListItem)) > packetSize)
+            return false;
+
+        // count 검사
+        BuffsList buffList = GetBuffsList();
+        size += sizeof(BuffListItem) * buffsCount;
+        for (int32 i = 0; i < buffList.Count(); ++i)
+        {
+            if (false == buffList[i].Validate((BYTE*)this, packetSize, OUT size))
+                return false;
+        }
+
+
+        // 전체 패킷 크기 검사 //
+        if (size != packetSize)
             return false;
 
         return true;
@@ -73,6 +99,15 @@ struct PKT_S_TEST
         data += buffsOffset;
         return BuffsList(reinterpret_cast<BuffListItem*>(data), buffsCount);
     }
+
+    using BuffsVictimsList = PacketList<uint64>;
+    BuffsVictimsList GetBuffsVictimList(BuffListItem* buffsItem)
+    {
+        BYTE* data = reinterpret_cast<BYTE*>(this);
+        data += buffsItem->victimsOffset;
+        return BuffsVictimsList{ reinterpret_cast<uint64*>(data), buffsItem->victimsCount };
+    }
+
 };
 #pragma pack()
 
@@ -91,14 +126,15 @@ void ClientPacketHandler::Handle_S_TEST(BYTE* buffer, int32 len)
     PKT_S_TEST::BuffsList buffs = pkt->GetBuffsList();
 
     cout << "BufCount : " << buffs.Count() << endl;
-    for (int32 i = 0; i < buffs.Count(); ++i)
-        cout << "BufInfo : " << buffs[i].buffID << ", " << buffs[i].remainTime << endl;
-
-    for (auto it = buffs.begin(); it != buffs.end(); ++it)
-        cout << "BufInfo : " << it->buffID << ", " << it->remainTime << endl;
-
     for (auto& buff : buffs)
+    {
         cout << "BufInfo : " << buff.buffID << ", " << buff.remainTime << endl;
+
+        PKT_S_TEST::BuffsVictimsList victims = pkt->GetBuffsVictimList(&buff);
+        cout << "victim count : " << victims.Count() << endl;
+        for (auto& victim : victims)
+            cout << "victim : " << victim << endl;
+    }
 }
 
 // packet 설계시 반드시 명심해야 하는 법칙 //
