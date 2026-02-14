@@ -6,7 +6,7 @@
 #include "Service.h"
 #include "Session.h"
 
-#include "ClientPacketHandler.h"
+#include "ServerPacketHandler.h"
 
 char sendData[12] = "Hello World";
 
@@ -27,7 +27,11 @@ public:
 
     virtual void OnRecvPacket(BYTE* buffer, int32 len) override
     {
-        ClientPacketHandler::HandlePacket(buffer, len);
+        PacketSessionRef session = GetPacketSessionRef();
+        PacketHeader* header = reinterpret_cast<PacketHeader*>(buffer);
+
+        // TODO: packetID 대역 체크
+        ServerPacketHandler::HandlePacket(session, buffer, len);
     }
 
     virtual void OnSend(int32 len) override
@@ -49,6 +53,8 @@ int main()
 {
     using std::chrono::operator""s;
     std::this_thread::sleep_for(1s);
+
+    ServerPacketHandler::Init();
 
     ClientServiceRef service{ MakeShared<ClientService>(
         NetworkAddress(L"127.0.0.1", 7777),

@@ -1,40 +1,23 @@
 #include "pch.h"
-#include "ClientPacketHandler.h"
+#include "ServerPacketHandler.h"
 #include "BufferReader.h"
 #include "Protocol.pb.h"
 
+PacketHandlerFunc GPacketHandler[UINT16_MAX] = { nullptr, };
 
-/*-----------------------------
-	 Client Packet Handler
------------------------------*/
 
-void ClientPacketHandler::HandlePacket(BYTE* buffer, int32 len)
+// 컨텐츠 작업자가 작성 //
+
+bool Handle_INVALID(PacketSessionRef& session, BYTE* buffer, int32 len)
 {
-    BufferReader br{ buffer, (uint32)len };
-    PacketHeader header;
-    br >> header;
-
-    switch (header.ID)
-    {
-    case S_TEST:
-        Handle_S_TEST(buffer, len);
-        break;
-
-    default:
-        break;
-    }
+    PacketHeader* header = reinterpret_cast<PacketHeader*>(buffer);
+    // TODO: Log
+    return false;
 }
 
-void ClientPacketHandler::Handle_S_TEST(BYTE* buffer, int32 len)
+bool Handle_S_TEST(PacketSessionRef& session, Protocol::S_TEST& pkt)
 {
     using namespace std;
-
-    Protocol::S_TEST pkt;
-
-    BYTE* ptr = buffer + sizeof(PacketHeader);
-
-    // 수신한 데이터를 역직렬화 //
-    ASSERT_CRASH(pkt.ParseFromArray(ptr, len - sizeof(PacketHeader)));
 
     {
         cout << "-------------------------" << endl;
@@ -51,4 +34,11 @@ void ClientPacketHandler::Handle_S_TEST(BYTE* buffer, int32 len)
         }
         cout << "-------------------------" << endl;
     }
+
+    return true;
+}
+
+bool Handle_S_LOGIN(PacketSessionRef& session, Protocol::S_LOGIN& pkt)
+{
+    return true;
 }

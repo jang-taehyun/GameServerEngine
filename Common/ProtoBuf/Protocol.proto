@@ -1,11 +1,12 @@
-syntax = "proto3";
+﻿syntax = "proto3";
 package Protocol;
 
-message BuffData
+import "Enum.proto";
+import "Struct.proto";
+
+message C_TEST
 {
-	uint64 buffID = 1;
-	float remainTime = 2;
-	repeated uint64 victims = 3;
+
 }
 
 message S_TEST
@@ -14,4 +15,9 @@ message S_TEST
 	uint32 HP = 2;
 	uint32 attack = 3;
 	repeated BuffData buffs = 4;
+}
+
+message S_LOGIN
+{
+
 }

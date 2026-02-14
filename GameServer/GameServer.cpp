@@ -9,12 +9,14 @@
 #include "GameSessionManager.h"
 #include "GameSession.h"
 #include "BufferWriter.h"
-#include "ServerPacketHandler.h"
+#include "ClientPacketHandler.h"
 #include "Protocol.pb.h"
 
 int main()
 {
     GSessionManager = new GameSessionManager;
+
+    ClientPacketHandler::Init();
 
     ServerServiceRef service{ MakeShared<ServerService>(
         NetworkAddress(L"127.0.0.1", 7777),
@@ -61,7 +63,7 @@ int main()
             data->add_victims(2000);
         }
 
-        SendBufferRef sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
+        SendBufferRef sendBuffer = ClientPacketHandler::MakeSendBuffer(pkt);
         GSessionManager->BroadCast(sendBuffer);
 
         using std::chrono::operator""ms;
@@ -82,6 +84,12 @@ int main()
 * - 직렬화, 역직렬화하는 부분을 쉽게 처리할 수 있다.
 * - 다른 엔진에 연동할 때도 비슷하게 작업할 수 있다.
 * - 퍼블리셔와 통신하는 코드를 작성할 때 협업하기 편하다.
+* 
+* protoBuf와 flatBuf의 비교
+* - protoBuf의 장점 : 작업하기엔 편하다.
+* - protoBuf의 단점 : flatBuf보다 성능이 떨어진다(중간에 객체를 생성해 복사 비용이 있기 때문)
+* - flatBuf의 장점 : 데이터를 바로 넣을 수 있다, protoBuf보다 성능이 좋다(복사 비용이 없기 때문)
+* - flatBuf의 단점 : 사용할 때 불편하다.
 */
 
 /**
