@@ -4,25 +4,34 @@ package Protocol;
 import "Enum.proto";
 import "Struct.proto";
 
-message C_TEST
+message C_LOGIN
 {
 
-}
-
-message S_TEST
-{
-	uint64 ID = 1;
-	uint32 HP = 2;
-	uint32 attack = 3;
-	repeated BuffData buffs = 4;
 }
 
 message S_LOGIN
 {
-
+	bool success = 1;
+	repeated Player players = 2;		// 아이디 발급 전 상태
 }
 
-// protoBuf를 C++로 사용할 때,
-// string은 UTF-8 인코딩을 사용한다.
-// 때문에 UTF-16 인코딩을 사용할 경우, BTYE 배열로 변환해서 보내고,
-// 받는 쪽에서는 BYTE 배열을 wstring 형식으로 변환해야 한다.
+message C_ENTER_GAME
+{
+	uint64 playerIndex = 1;
+}
+
+message S_ENTER_GAME
+{
+	bool success = 1;
+}
+
+message C_CHAT
+{
+	string msg = 1;
+}
+
+message S_CHAT
+{
+	uint64 ID = 1;
+	string msg = 2;
+}

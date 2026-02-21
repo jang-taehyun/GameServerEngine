@@ -23,6 +23,10 @@ public:
     {
         // using namespace std;
         // cout << "Connected To Server!!" << endl;
+
+        Protocol::C_LOGIN pkt;
+        auto sendBuffer = ServerPacketHandler::MakeSendBuffer(pkt);
+        Send(sendBuffer);
     }
 
     virtual void OnRecvPacket(BYTE* buffer, int32 len) override
@@ -56,12 +60,14 @@ int main()
 
     ServerPacketHandler::Init();
 
-    ClientServiceRef service{ MakeShared<ClientService>(
-        NetworkAddress(L"127.0.0.1", 7777),
-        MakeShared<IOCPCore>(),
-        MakeShared<ServerSession>,                // TODO: Session manager µî
-        1
-    ) };
+    ClientServiceRef service{
+        MakeShared<ClientService>(
+            NetworkAddress(L"127.0.0.1", 7777),
+            MakeShared<IOCPCore>(),
+            MakeShared<ServerSession>,                // TODO: Session manager µî
+            100
+        )
+    };
 
     ASSERT_CRASH(service->Start());
 
@@ -76,6 +82,16 @@ int main()
                 }
             }
         );
+    }
+
+    Protocol::C_CHAT chatPkt;
+    chatPkt.set_msg(u8"Hello world!");
+    auto sendBuffer = ServerPacketHandler::MakeSendBuffer(chatPkt);
+
+    while (true)
+    {
+        service->Broadcast(sendBuffer);
+        std::this_thread::sleep_for(1s);
     }
 
     GThreadManager->Join();

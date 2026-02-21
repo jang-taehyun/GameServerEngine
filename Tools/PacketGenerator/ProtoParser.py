@@ -1,5 +1,8 @@
 ﻿
 
+from encodings import utf_8
+
+
 class ProtoParser():
     def __init__(self, start_id, recv_prefix, send_prefix):
         self.recv_pkt = []              # 수신 패킷 목록(배열)
@@ -11,7 +14,7 @@ class ProtoParser():
         self.send_prefix = send_prefix
         
     def parse_proto(self, path):
-         f = open(path, 'r')
+         f = open(path, mode='r', encoding='utf-8')
          lines = f.readlines()
 
          for line in lines:

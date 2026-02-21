@@ -10,11 +10,13 @@
 #include "GameSession.h"
 #include "BufferWriter.h"
 #include "ClientPacketHandler.h"
+#include "Room.h"
 #include "Protocol.pb.h"
 
 int main()
 {
     GSessionManager = new GameSessionManager;
+    GRoom = new Room;
 
     ClientPacketHandler::Init();
 
@@ -40,38 +42,7 @@ int main()
         );
     }
 
-    WCHAR sendData3[1000] = L"가";       // UTF-16 인코딩 사용(L을 앞에 붙이면 UTF-16 인코딩을 사용한다, C#과 궁합이 잘 맞아서 많이 사용한다)
-
-    while (true)
-    {
-        Protocol::S_TEST pkt;
-
-        pkt.set_id(1000);
-        pkt.set_hp(100);
-        pkt.set_id(10);
-        {
-            Protocol::BuffData* data = pkt.add_buffs();
-            data->set_buffid(100);
-            data->set_remaintime(1.2f);
-            data->add_victims(4000);
-        }
-        {
-            Protocol::BuffData* data = pkt.add_buffs();
-            data->set_buffid(200);
-            data->set_remaintime(2.5f);
-            data->add_victims(1000);
-            data->add_victims(2000);
-        }
-
-        SendBufferRef sendBuffer = ClientPacketHandler::MakeSendBuffer(pkt);
-        GSessionManager->BroadCast(sendBuffer);
-
-        using std::chrono::operator""ms;
-        std::this_thread::sleep_for(250ms);
-    }
-
     GThreadManager->Join();
-
     delete GSessionManager;
 
     return 0;

@@ -54,10 +54,10 @@ extern "C" {
 extern const ::google::protobuf::internal::DescriptorTable descriptor_table_Struct_2eproto;
 }  // extern "C"
 namespace Protocol {
-class BuffData;
-struct BuffDataDefaultTypeInternal;
-extern BuffDataDefaultTypeInternal _BuffData_default_instance_;
-extern const ::google::protobuf::internal::ClassDataFull BuffData_class_data_;
+class Player;
+struct PlayerDefaultTypeInternal;
+extern PlayerDefaultTypeInternal _Player_default_instance_;
+extern const ::google::protobuf::internal::ClassDataFull Player_class_data_;
 }  // namespace Protocol
 namespace google {
 namespace protobuf {
@@ -71,30 +71,30 @@ namespace Protocol {
 
 // -------------------------------------------------------------------
 
-class BuffData final : public ::google::protobuf::Message
-/* @@protoc_insertion_point(class_definition:Protocol.BuffData) */ {
+class Player final : public ::google::protobuf::Message
+/* @@protoc_insertion_point(class_definition:Protocol.Player) */ {
  public:
-  inline BuffData() : BuffData(nullptr) {}
-  ~BuffData() PROTOBUF_FINAL;
+  inline Player() : Player(nullptr) {}
+  ~Player() PROTOBUF_FINAL;
 
 #if defined(PROTOBUF_CUSTOM_VTABLE)
-  void operator delete(BuffData* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
+  void operator delete(Player* PROTOBUF_NONNULL msg, ::std::destroying_delete_t) {
     SharedDtor(*msg);
-    ::google::protobuf::internal::SizedDelete(msg, sizeof(BuffData));
+    ::google::protobuf::internal::SizedDelete(msg, sizeof(Player));
   }
 #endif
 
   template <typename = void>
-  explicit PROTOBUF_CONSTEXPR BuffData(::google::protobuf::internal::ConstantInitialized);
+  explicit PROTOBUF_CONSTEXPR Player(::google::protobuf::internal::ConstantInitialized);
 
-  inline BuffData(const BuffData& from) : BuffData(nullptr, from) {}
-  inline BuffData(BuffData&& from) noexcept
-      : BuffData(nullptr, ::std::move(from)) {}
-  inline BuffData& operator=(const BuffData& from) {
+  inline Player(const Player& from) : Player(nullptr, from) {}
+  inline Player(Player&& from) noexcept
+      : Player(nullptr, ::std::move(from)) {}
+  inline Player& operator=(const Player& from) {
     CopyFrom(from);
     return *this;
   }
-  inline BuffData& operator=(BuffData&& from) noexcept {
+  inline Player& operator=(Player&& from) noexcept {
     if (this == &from) return *this;
     if (::google::protobuf::internal::CanMoveWithInternalSwap(GetArena(), from.GetArena())) {
       InternalSwap(&from);
@@ -122,13 +122,13 @@ class BuffData final : public ::google::protobuf::Message
   static const ::google::protobuf::Reflection* PROTOBUF_NONNULL GetReflection() {
     return default_instance().GetMetadata().reflection;
   }
-  static const BuffData& default_instance() {
-    return *reinterpret_cast<const BuffData*>(
-        &_BuffData_default_instance_);
+  static const Player& default_instance() {
+    return *reinterpret_cast<const Player*>(
+        &_Player_default_instance_);
   }
   static constexpr int kIndexInFileMessages = 0;
-  friend void swap(BuffData& a, BuffData& b) { a.Swap(&b); }
-  inline void Swap(BuffData* PROTOBUF_NONNULL other) {
+  friend void swap(Player& a, Player& b) { a.Swap(&b); }
+  inline void Swap(Player* PROTOBUF_NONNULL other) {
     if (other == this) return;
     if (::google::protobuf::internal::CanUseInternalSwap(GetArena(), other->GetArena())) {
       InternalSwap(other);
@@ -136,7 +136,7 @@ class BuffData final : public ::google::protobuf::Message
       ::google::protobuf::internal::GenericSwap(this, other);
     }
   }
-  void UnsafeArenaSwap(BuffData* PROTOBUF_NONNULL other) {
+  void UnsafeArenaSwap(Player* PROTOBUF_NONNULL other) {
     if (other == this) return;
     ABSL_DCHECK(GetArena() == other->GetArena());
     InternalSwap(other);
@@ -144,13 +144,13 @@ class BuffData final : public ::google::protobuf::Message
 
   // implements Message ----------------------------------------------
 
-  BuffData* PROTOBUF_NONNULL New(::google::protobuf::Arena* PROTOBUF_NULLABLE arena = nullptr) const {
-    return ::google::protobuf::Message::DefaultConstruct<BuffData>(arena);
+  Player* PROTOBUF_NONNULL New(::google::protobuf::Arena* PROTOBUF_NULLABLE arena = nullptr) const {
+    return ::google::protobuf::Message::DefaultConstruct<Player>(arena);
   }
   using ::google::protobuf::Message::CopyFrom;
-  void CopyFrom(const BuffData& from);
+  void CopyFrom(const Player& from);
   using ::google::protobuf::Message::MergeFrom;
-  void MergeFrom(const BuffData& from) { BuffData::MergeImpl(*this, from); }
+  void MergeFrom(const Player& from) { Player::MergeImpl(*this, from); }
 
   private:
   static void MergeImpl(::google::protobuf::MessageLite& to_msg,
@@ -186,17 +186,17 @@ class BuffData final : public ::google::protobuf::Message
   private:
   void SharedCtor(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
   static void SharedDtor(MessageLite& self);
-  void InternalSwap(BuffData* PROTOBUF_NONNULL other);
+  void InternalSwap(Player* PROTOBUF_NONNULL other);
  private:
   template <typename T>
   friend ::absl::string_view(::google::protobuf::internal::GetAnyMessageName)();
-  static ::absl::string_view FullMessageName() { return "Protocol.BuffData"; }
+  static ::absl::string_view FullMessageName() { return "Protocol.Player"; }
 
-  explicit BuffData(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
-  BuffData(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const BuffData& from);
-  BuffData(
-      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, BuffData&& from) noexcept
-      : BuffData(arena) {
+  explicit Player(::google::protobuf::Arena* PROTOBUF_NULLABLE arena);
+  Player(::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Player& from);
+  Player(
+      ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, Player&& from) noexcept
+      : Player(arena) {
     *this = ::std::move(from);
   }
   const ::google::protobuf::internal::ClassData* PROTOBUF_NONNULL GetClassData() const PROTOBUF_FINAL;
@@ -213,54 +213,51 @@ class BuffData final : public ::google::protobuf::Message
 
   // accessors -------------------------------------------------------
   enum : int {
-    kVictimsFieldNumber = 3,
-    kBuffIDFieldNumber = 1,
-    kRemainTimeFieldNumber = 2,
+    kNameFieldNumber = 2,
+    kIDFieldNumber = 1,
+    kPlayerTypeFieldNumber = 3,
   };
-  // repeated uint64 victims = 3;
-  int victims_size() const;
-  private:
-  int _internal_victims_size() const;
-
-  public:
-  void clear_victims() ;
-  ::uint64_t victims(int index) const;
-  void set_victims(int index, ::uint64_t value);
-  void add_victims(::uint64_t value);
-  const ::google::protobuf::RepeatedField<::uint64_t>& victims() const;
-  ::google::protobuf::RepeatedField<::uint64_t>* PROTOBUF_NONNULL mutable_victims();
+  // string name = 2;
+  void clear_name() ;
+  const ::std::string& name() const;
+  template <typename Arg_ = const ::std::string&, typename... Args_>
+  void set_name(Arg_&& arg, Args_... args);
+  ::std::string* PROTOBUF_NONNULL mutable_name();
+  [[nodiscard]] ::std::string* PROTOBUF_NULLABLE release_name();
+  void set_allocated_name(::std::string* PROTOBUF_NULLABLE value);
 
   private:
-  const ::google::protobuf::RepeatedField<::uint64_t>& _internal_victims() const;
-  ::google::protobuf::RepeatedField<::uint64_t>* PROTOBUF_NONNULL _internal_mutable_victims();
+  const ::std::string& _internal_name() const;
+  PROTOBUF_ALWAYS_INLINE void _internal_set_name(const ::std::string& value);
+  ::std::string* PROTOBUF_NONNULL _internal_mutable_name();
 
   public:
-  // uint64 buffID = 1;
-  void clear_buffid() ;
-  ::uint64_t buffid() const;
-  void set_buffid(::uint64_t value);
+  // uint64 ID = 1;
+  void clear_id() ;
+  ::uint64_t id() const;
+  void set_id(::uint64_t value);
 
   private:
-  ::uint64_t _internal_buffid() const;
-  void _internal_set_buffid(::uint64_t value);
+  ::uint64_t _internal_id() const;
+  void _internal_set_id(::uint64_t value);
 
   public:
-  // float remainTime = 2;
-  void clear_remaintime() ;
-  float remaintime() const;
-  void set_remaintime(float value);
+  // .Protocol.PlayerType playerType = 3;
+  void clear_playertype() ;
+  ::Protocol::PlayerType playertype() const;
+  void set_playertype(::Protocol::PlayerType value);
 
   private:
-  float _internal_remaintime() const;
-  void _internal_set_remaintime(float value);
+  ::Protocol::PlayerType _internal_playertype() const;
+  void _internal_set_playertype(::Protocol::PlayerType value);
 
   public:
-  // @@protoc_insertion_point(class_scope:Protocol.BuffData)
+  // @@protoc_insertion_point(class_scope:Protocol.Player)
  private:
   class _Internal;
   friend class ::google::protobuf::internal::TcParser;
   static const ::google::protobuf::internal::TcParseTable<2, 3,
-                                   0, 0,
+                                   0, 28,
                                    2>
       _table_;
 
@@ -278,20 +275,19 @@ class BuffData final : public ::google::protobuf::Message
     inline explicit Impl_(
         ::google::protobuf::internal::InternalVisibility visibility,
         ::google::protobuf::Arena* PROTOBUF_NULLABLE arena, const Impl_& from,
-        const BuffData& from_msg);
+        const Player& from_msg);
     ::google::protobuf::internal::HasBits<1> _has_bits_;
     ::google::protobuf::internal::CachedSize _cached_size_;
-    ::google::protobuf::RepeatedField<::uint64_t> victims_;
-    ::google::protobuf::internal::CachedSize _victims_cached_byte_size_;
-    ::uint64_t buffid_;
-    float remaintime_;
+    ::google::protobuf::internal::ArenaStringPtr name_;
+    ::uint64_t id_;
+    int playertype_;
     PROTOBUF_TSAN_DECLARE_MEMBER
   };
   union { Impl_ _impl_; };
   friend struct ::TableStruct_Struct_2eproto;
 };
 
-extern const ::google::protobuf::internal::ClassDataFull BuffData_class_data_;
+extern const ::google::protobuf::internal::ClassDataFull Player_class_data_;
 
 // ===================================================================
 
@@ -307,106 +303,121 @@ extern const ::google::protobuf::internal::ClassDataFull BuffData_class_data_;
 #endif  // __GNUC__
 // -------------------------------------------------------------------
 
-// BuffData
+// Player
 
-// uint64 buffID = 1;
-inline void BuffData::clear_buffid() {
+// uint64 ID = 1;
+inline void Player::clear_id() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.buffid_ = ::uint64_t{0u};
+  _impl_.id_ = ::uint64_t{0u};
   ClearHasBit(_impl_._has_bits_[0],
                   0x00000002U);
 }
-inline ::uint64_t BuffData::buffid() const {
-  // @@protoc_insertion_point(field_get:Protocol.BuffData.buffID)
-  return _internal_buffid();
+inline ::uint64_t Player::id() const {
+  // @@protoc_insertion_point(field_get:Protocol.Player.ID)
+  return _internal_id();
 }
-inline void BuffData::set_buffid(::uint64_t value) {
-  _internal_set_buffid(value);
+inline void Player::set_id(::uint64_t value) {
+  _internal_set_id(value);
   SetHasBit(_impl_._has_bits_[0], 0x00000002U);
-  // @@protoc_insertion_point(field_set:Protocol.BuffData.buffID)
+  // @@protoc_insertion_point(field_set:Protocol.Player.ID)
 }
-inline ::uint64_t BuffData::_internal_buffid() const {
+inline ::uint64_t Player::_internal_id() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.buffid_;
+  return _impl_.id_;
 }
-inline void BuffData::_internal_set_buffid(::uint64_t value) {
+inline void Player::_internal_set_id(::uint64_t value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.buffid_ = value;
+  _impl_.id_ = value;
 }
 
-// float remainTime = 2;
-inline void BuffData::clear_remaintime() {
+// string name = 2;
+inline void Player::clear_name() {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.remaintime_ = 0;
+  _impl_.name_.ClearToEmpty();
+  ClearHasBit(_impl_._has_bits_[0],
+                  0x00000001U);
+}
+inline const ::std::string& Player::name() const
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  // @@protoc_insertion_point(field_get:Protocol.Player.name)
+  return _internal_name();
+}
+template <typename Arg_, typename... Args_>
+PROTOBUF_ALWAYS_INLINE void Player::set_name(Arg_&& arg, Args_... args) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  SetHasBit(_impl_._has_bits_[0], 0x00000001U);
+  _impl_.name_.Set(static_cast<Arg_&&>(arg), args..., GetArena());
+  // @@protoc_insertion_point(field_set:Protocol.Player.name)
+}
+inline ::std::string* PROTOBUF_NONNULL Player::mutable_name()
+    ABSL_ATTRIBUTE_LIFETIME_BOUND {
+  SetHasBit(_impl_._has_bits_[0], 0x00000001U);
+  ::std::string* _s = _internal_mutable_name();
+  // @@protoc_insertion_point(field_mutable:Protocol.Player.name)
+  return _s;
+}
+inline const ::std::string& Player::_internal_name() const {
+  ::google::protobuf::internal::TSanRead(&_impl_);
+  return _impl_.name_.Get();
+}
+inline void Player::_internal_set_name(const ::std::string& value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.name_.Set(value, GetArena());
+}
+inline ::std::string* PROTOBUF_NONNULL Player::_internal_mutable_name() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  return _impl_.name_.Mutable( GetArena());
+}
+inline ::std::string* PROTOBUF_NULLABLE Player::release_name() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  // @@protoc_insertion_point(field_release:Protocol.Player.name)
+  if (!CheckHasBit(_impl_._has_bits_[0], 0x00000001U)) {
+    return nullptr;
+  }
+  ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
+  auto* released = _impl_.name_.Release();
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString()) {
+    _impl_.name_.Set("", GetArena());
+  }
+  return released;
+}
+inline void Player::set_allocated_name(::std::string* PROTOBUF_NULLABLE value) {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  if (value != nullptr) {
+    SetHasBit(_impl_._has_bits_[0], 0x00000001U);
+  } else {
+    ClearHasBit(_impl_._has_bits_[0], 0x00000001U);
+  }
+  _impl_.name_.SetAllocated(value, GetArena());
+  if (::google::protobuf::internal::DebugHardenForceCopyDefaultString() && _impl_.name_.IsDefault()) {
+    _impl_.name_.Set("", GetArena());
+  }
+  // @@protoc_insertion_point(field_set_allocated:Protocol.Player.name)
+}
+
+// .Protocol.PlayerType playerType = 3;
+inline void Player::clear_playertype() {
+  ::google::protobuf::internal::TSanWrite(&_impl_);
+  _impl_.playertype_ = 0;
   ClearHasBit(_impl_._has_bits_[0],
                   0x00000004U);
 }
-inline float BuffData::remaintime() const {
-  // @@protoc_insertion_point(field_get:Protocol.BuffData.remainTime)
-  return _internal_remaintime();
+inline ::Protocol::PlayerType Player::playertype() const {
+  // @@protoc_insertion_point(field_get:Protocol.Player.playerType)
+  return _internal_playertype();
 }
-inline void BuffData::set_remaintime(float value) {
-  _internal_set_remaintime(value);
+inline void Player::set_playertype(::Protocol::PlayerType value) {
+  _internal_set_playertype(value);
   SetHasBit(_impl_._has_bits_[0], 0x00000004U);
-  // @@protoc_insertion_point(field_set:Protocol.BuffData.remainTime)
+  // @@protoc_insertion_point(field_set:Protocol.Player.playerType)
 }
-inline float BuffData::_internal_remaintime() const {
+inline ::Protocol::PlayerType Player::_internal_playertype() const {
   ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.remaintime_;
+  return static_cast<::Protocol::PlayerType>(_impl_.playertype_);
 }
-inline void BuffData::_internal_set_remaintime(float value) {
+inline void Player::_internal_set_playertype(::Protocol::PlayerType value) {
   ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.remaintime_ = value;
-}
-
-// repeated uint64 victims = 3;
-inline int BuffData::_internal_victims_size() const {
-  return _internal_victims().size();
-}
-inline int BuffData::victims_size() const {
-  return _internal_victims_size();
-}
-inline void BuffData::clear_victims() {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _impl_.victims_.Clear();
-  ClearHasBitForRepeated(_impl_._has_bits_[0],
-                  0x00000001U);
-}
-inline ::uint64_t BuffData::victims(int index) const {
-  // @@protoc_insertion_point(field_get:Protocol.BuffData.victims)
-  return _internal_victims().Get(index);
-}
-inline void BuffData::set_victims(int index, ::uint64_t value) {
-  _internal_mutable_victims()->Set(index, value);
-  // @@protoc_insertion_point(field_set:Protocol.BuffData.victims)
-}
-inline void BuffData::add_victims(::uint64_t value) {
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  _internal_mutable_victims()->Add(value);
-  SetHasBitForRepeated(_impl_._has_bits_[0], 0x00000001U);
-  // @@protoc_insertion_point(field_add:Protocol.BuffData.victims)
-}
-inline const ::google::protobuf::RepeatedField<::uint64_t>& BuffData::victims() const
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  // @@protoc_insertion_point(field_list:Protocol.BuffData.victims)
-  return _internal_victims();
-}
-inline ::google::protobuf::RepeatedField<::uint64_t>* PROTOBUF_NONNULL BuffData::mutable_victims()
-    ABSL_ATTRIBUTE_LIFETIME_BOUND {
-  SetHasBitForRepeated(_impl_._has_bits_[0], 0x00000001U);
-  // @@protoc_insertion_point(field_mutable_list:Protocol.BuffData.victims)
-  ::google::protobuf::internal::TSanWrite(&_impl_);
-  return _internal_mutable_victims();
-}
-inline const ::google::protobuf::RepeatedField<::uint64_t>&
-BuffData::_internal_victims() const {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return _impl_.victims_;
-}
-inline ::google::protobuf::RepeatedField<::uint64_t>* PROTOBUF_NONNULL
-BuffData::_internal_mutable_victims() {
-  ::google::protobuf::internal::TSanRead(&_impl_);
-  return &_impl_.victims_;
+  _impl_.playertype_ = value;
 }
 
 #ifdef __GNUC__

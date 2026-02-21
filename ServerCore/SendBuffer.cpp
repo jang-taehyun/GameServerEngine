@@ -83,16 +83,16 @@ SendBufferRef SendBufferManager::Open(uint32 size)
 		LSendBufferChunk->Reset();
 	}
 
-	using namespace std;
-	cout << "FREE : " << LSendBufferChunk->FreeSize() << endl;
+	// using namespace std;
+	// cout << "FREE : " << LSendBufferChunk->FreeSize() << endl;
 
 	return LSendBufferChunk->Open(size);
 }
 
 SendBufferChunkRef SendBufferManager::Pop()
 {
-	using namespace std;
-	cout << "Pop SENDBUFFERCHUNK" << endl;
+	// using namespace std;
+	// cout << "Pop SENDBUFFERCHUNK" << endl;
 
 	{
 		WRITE_LOCK;

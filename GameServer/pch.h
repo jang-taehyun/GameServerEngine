@@ -10,3 +10,11 @@
 
 
 #include <CorePch.h>
+
+#include "Enum.pb.h"
+
+using GameSessionRef = std::shared_ptr<class GameSession>;
+using PlayerRef = std::shared_ptr<class Player>;
+
+class Room;
+extern Room* GRoom;

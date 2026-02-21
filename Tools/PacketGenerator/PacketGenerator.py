@@ -27,7 +27,7 @@ def main():
     f.write(output)
     f.close()
 
-    print(output)
+    # print(output)
     return
 
 if __name__ == '__main__':
