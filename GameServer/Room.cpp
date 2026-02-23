@@ -3,18 +3,6 @@
 #include "GameSession.h"
 #include "Room.h"
 
-void Room::FlushJob()
-{
-	while (true)
-	{
-		JobRef job = _jobQueue.Pop();
-		if (nullptr == job)
-			break;
-
-		job->Execute();
-	}
-}
-
 void Room::Enter(PlayerRef player)
 {
 	_players[player->playerID] = player;

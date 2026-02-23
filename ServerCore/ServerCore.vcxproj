@@ -163,8 +163,8 @@
     <ClInclude Include="IOCPCore.h" />
     <ClInclude Include="IOCPEvent.h" />
     <ClInclude Include="Job.h" />
+    <ClInclude Include="LockQueue.h" />
     <ClInclude Include="JobQueue.h" />
-    <ClInclude Include="JobSerializer.h" />
     <ClInclude Include="Listener.h" />
     <ClInclude Include="Lock.h" />
     <ClInclude Include="Memory.h" />
@@ -193,8 +193,8 @@
     <ClCompile Include="IOCPCore.cpp" />
     <ClCompile Include="IOCPEvent.cpp" />
     <ClCompile Include="Job.cpp" />
+    <ClCompile Include="LockQueue.cpp" />
     <ClCompile Include="JobQueue.cpp" />
-    <ClCompile Include="JobSerializer.cpp" />
     <ClCompile Include="Listener.cpp" />
     <ClCompile Include="Lock.cpp" />
     <ClCompile Include="Memory.cpp" />

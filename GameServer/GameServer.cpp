@@ -43,14 +43,6 @@ int main()
         );
     }
 
-    while (true)
-    {
-        GRoom->FlushJob();
-
-        using std::chrono::operator""ms;
-        std::this_thread::sleep_for(1ms);
-    }
-
     GThreadManager->Join();
     delete GSessionManager;
 
