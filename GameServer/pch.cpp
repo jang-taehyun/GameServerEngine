@@ -1,3 +1,3 @@
 #include "pch.h"
 
-Room* GRoom = nullptr;
+std::shared_ptr<Room> GRoom = nullptr;

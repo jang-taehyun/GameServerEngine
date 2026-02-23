@@ -17,4 +17,4 @@ using GameSessionRef = std::shared_ptr<class GameSession>;
 using PlayerRef = std::shared_ptr<class Player>;
 
 class Room;
-extern Room* GRoom;
+extern std::shared_ptr<Room> GRoom;

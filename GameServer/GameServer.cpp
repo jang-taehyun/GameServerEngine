@@ -14,41 +14,10 @@
 #include "Job.h"
 #include "Protocol.pb.h"
 
-void HealByValue(int64 target, int32 value)
-{
-    using namespace std;
-    cout << target << "ÇÑÅ× Èú " << value << "¸¸Å­ ÁÜ" << endl;
-}
-
-class Knight
-{
-public:
-    void HealMe(int32 value)
-    {
-        using namespace std;
-        cout << "heal me!" << value << endl;
-    }
-};
-
 int main()
 {
     GSessionManager = new GameSessionManager;
-    GRoom = new Room;
-
-    // TEST JOB //
-    {
-        FuncJob<void, int64, int32> job{ HealByValue, 100, 10 };
-        job();
-
-        int32 a = 1;
-    }
-    {
-        Knight k1;
-        MemberFunctionJob<Knight, void, int32> job{ &k1, &Knight::HealMe, 10 };
-        job();
-    
-        int32 a = 1;
-    }
+    GRoom = std::make_shared<Room>();
 
     ClientPacketHandler::Init();
 
@@ -84,7 +53,6 @@ int main()
 
     GThreadManager->Join();
     delete GSessionManager;
-    delete GRoom;
 
     return 0;
 }

@@ -7,7 +7,7 @@ void Room::FlushJob()
 {
 	while (true)
 	{
-		JobRef job = _jobs.Pop();
+		JobRef job = _jobQueue.Pop();
 		if (nullptr == job)
 			break;
 
