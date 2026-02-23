@@ -11,12 +11,27 @@
 #include "BufferWriter.h"
 #include "ClientPacketHandler.h"
 #include "Room.h"
+#include "Job.h"
 #include "Protocol.pb.h"
 
 int main()
 {
     GSessionManager = new GameSessionManager;
     GRoom = new Room;
+
+    // TEST JOB //
+    {
+        // [일감 의뢰 내용] : 1번 유저한테 10만큼 힐을 줘라!
+        // 행동 : heal
+        // 인자 : 1번 유저, 10이라는 힐량
+
+        HealJob healJob;
+        healJob._target = 1;
+        healJob._healValue = 10;
+
+        // 나~~~중에
+        healJob.Execute();
+    }
 
     ClientPacketHandler::Init();
 
@@ -42,30 +57,30 @@ int main()
         );
     }
 
+    while (true)
+    {
+        GRoom->FlushJob();
+
+        using std::chrono::operator""ms;
+        std::this_thread::sleep_for(1ms);
+    }
+
     GThreadManager->Join();
     delete GSessionManager;
+    delete GRoom;
 
     return 0;
 }
 
-/**
-* protoBuf의 장점
-* - 안정적이다.(그래서 많이 사용하는듯)
-* - 다양한 방법으로 데이터를 채울 수 있다.
-* - 직렬화, 역직렬화하는 부분을 쉽게 처리할 수 있다.
-* - 다른 엔진에 연동할 때도 비슷하게 작업할 수 있다.
-* - 퍼블리셔와 통신하는 코드를 작성할 때 협업하기 편하다.
-* 
-* protoBuf와 flatBuf의 비교
-* - protoBuf의 장점 : 작업하기엔 편하다.
-* - protoBuf의 단점 : flatBuf보다 성능이 떨어진다(중간에 객체를 생성해 복사 비용이 있기 때문)
-* - flatBuf의 장점 : 데이터를 바로 넣을 수 있다, protoBuf보다 성능이 좋다(복사 비용이 없기 때문)
-* - flatBuf의 단점 : 사용할 때 불편하다.
-*/
 
 /**
-* protoBuf, vcpkg 설치 참고 자료
-* 
-* https://minttea25.tistory.com/128
-* https://velog.io/@pikamon/CC-15
+* Command 패턴
+* - 어떤 요청을 캡슐화해서 클래스, 함수 객체 등으로 만드는 패턴(주문서를 만들어서 직원에게 전달한다.)
+*   - 어떤 요청을 다른 객체로 담고 있다가 누군가에게 건네준다.
+*   - 요청을 처리하는 쓰레드는 요청만 처리하고,
+*       주문서를 만드는 쓰레드는 주문서를 만들고 기다렸다가 요청을 처리하는 쓰레드에게 건내준다.
+* - 장점
+*   - 쓰레드마다 영역이 분리되어서, 각 쓰레드들은 각자 할일들에 집중할 수 있음
+*   - 요청하는 시점, 실행하는 시점을 분리할 수 있음
+*   - 요청을 수정, 취소 할수있다.
 */

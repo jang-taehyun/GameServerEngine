@@ -73,8 +73,9 @@ bool Handle_C_ENTER_GAME(PacketSessionRef& session, Protocol::C_ENTER_GAME& pkt)
 
 	// TODO: validation üũ
 
-	PlayerRef player = gameSession->_players[index];		// READ_ONLY?
-	GRoom->Enter(player);			// WRITE_LOCK
+	PlayerRef player = gameSession->_players[index];		// TODO: READ_ONLY?
+
+	GRoom->PushJob(MakeShared<EnterJob>(*GRoom, player));
 
 	Protocol::S_ENTER_GAME enterGamePkt;
 	enterGamePkt.set_success(true);
@@ -92,7 +93,7 @@ bool Handle_C_CHAT(PacketSessionRef& session, Protocol::C_CHAT& pkt)
 	chatPkt.set_msg(pkt.msg());
 	auto sendBuffer = ClientPacketHandler::MakeSendBuffer(chatPkt);
 
-	GRoom->Broadcast(sendBuffer);	// WRITE_LOCK
+	GRoom->PushJob(MakeShared<BroadcastJob>(*GRoom, sendBuffer));
 
 	return true;
 }
