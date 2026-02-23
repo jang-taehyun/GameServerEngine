@@ -14,6 +14,22 @@
 #include "Job.h"
 #include "Protocol.pb.h"
 
+void HealByValue(int64 target, int32 value)
+{
+    using namespace std;
+    cout << target << "한테 힐 " << value << "만큼 줌" << endl;
+}
+
+class Knight
+{
+public:
+    void HealMe(int32 value)
+    {
+        using namespace std;
+        cout << "heal me!" << value << endl;
+    }
+};
+
 int main()
 {
     GSessionManager = new GameSessionManager;
@@ -21,16 +37,17 @@ int main()
 
     // TEST JOB //
     {
-        // [일감 의뢰 내용] : 1번 유저한테 10만큼 힐을 줘라!
-        // 행동 : heal
-        // 인자 : 1번 유저, 10이라는 힐량
+        FuncJob<void, int64, int32> job{ HealByValue, 100, 10 };
+        job();
 
-        HealJob healJob;
-        healJob._target = 1;
-        healJob._healValue = 10;
-
-        // 나~~~중에
-        healJob.Execute();
+        int32 a = 1;
+    }
+    {
+        Knight k1;
+        MemberFunctionJob<Knight, void, int32> job{ &k1, &Knight::HealMe, 10 };
+        job();
+    
+        int32 a = 1;
     }
 
     ClientPacketHandler::Init();
