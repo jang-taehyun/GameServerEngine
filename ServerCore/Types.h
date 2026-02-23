@@ -21,16 +21,32 @@ using UniqueLock = std::unique_lock<std::mutex>;
 using LockGuard = std::lock_guard<std::mutex>;
 
 // shared_ptr ¿Á¡ˆ¡§ //
-using IOCPCoreRef				= std::shared_ptr<class IOCPCore>;
-using IOCPObjectRef				= std::shared_ptr<class IOCPObject>;
-using SessionRef				= std::shared_ptr<class Session>;
-using PacketSessionRef			= std::shared_ptr<class PacketSession>;
-using ListenerRef				= std::shared_ptr<class Listener>;
-using ServerServiceRef			= std::shared_ptr<class ServerService>;
-using ClientServiceRef			= std::shared_ptr<class ClientService>;
-using SendBufferRef				= std::shared_ptr<class SendBuffer>;
-using SendBufferChunkRef		= std::shared_ptr<class SendBufferChunk>;
-using JobRef					= std::shared_ptr<class Job>;
+#define USING_SHARED_PTR(name)	using name##Ref = std::shared_ptr<class name>;
+
+USING_SHARED_PTR(IOCPCore);
+USING_SHARED_PTR(IOCPObject);
+USING_SHARED_PTR(Session);
+USING_SHARED_PTR(PacketSession);
+USING_SHARED_PTR(Listener);
+USING_SHARED_PTR(ServerService);
+USING_SHARED_PTR(ClientService);
+USING_SHARED_PTR(SendBuffer);
+USING_SHARED_PTR(SendBufferChunk);
+USING_SHARED_PTR(Job);
+USING_SHARED_PTR(JobQueue);
+
+
+//using IOCPCoreRef				= std::shared_ptr<class IOCPCore>;
+//using IOCPObjectRef				= std::shared_ptr<class IOCPObject>;
+//using SessionRef				= std::shared_ptr<class Session>;
+//using PacketSessionRef			= std::shared_ptr<class PacketSession>;
+//using ListenerRef				= std::shared_ptr<class Listener>;
+//using ServerServiceRef			= std::shared_ptr<class ServerService>;
+//using ClientServiceRef			= std::shared_ptr<class ClientService>;
+//using SendBufferRef				= std::shared_ptr<class SendBuffer>;
+//using SendBufferChunkRef		= std::shared_ptr<class SendBufferChunk>;
+//using JobRef					= std::shared_ptr<class Job>;
+//using JobQueueRef				= std::shared_ptr<class JobQueue>;
 
 
 #define		size16(val)		static_cast<int16>(sizeof(val))

@@ -14,6 +14,25 @@
 #include "Job.h"
 #include "Protocol.pb.h"
 
+enum
+{
+    WORKER_TICK = 64,
+};
+
+void DoWorkerJob(ServerServiceRef& service)
+{
+    while (true)
+    {
+        LEndTickCount = ::GetTickCount64() + WORKER_TICK;
+
+        // 네트워크 입출력 처리 -> 패킷 핸들러에 의해 인게임 로직까지 처리
+        service->GetIOCPCore()->Dispatch(10);
+
+        // global queue
+        ThreadManager::DoGlobalQueueWork();
+    }
+}
+
 int main()
 {
     GSessionManager = new GameSessionManager;
@@ -33,15 +52,19 @@ int main()
     for (int32 i = 0; i < 5; ++i)
     {
         GThreadManager->Launch(
-            [=]()
+            [&service]()
             {
                 while (true)
                 {
-                    service->GetIOCPCore()->Dispatch();
+                    DoWorkerJob(service);
                 }
             }
         );
     }
+
+    // Main Thread
+    DoWorkerJob(service);
+    
 
     GThreadManager->Join();
     delete GSessionManager;

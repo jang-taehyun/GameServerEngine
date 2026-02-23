@@ -29,6 +29,9 @@ public:
 	// TLS 해제 //
 	static void DestroyTLS();
 
+	// global queue에 있는 job queue 실행 //
+	static void DoGlobalQueueWork();
+
 private:
 	Mutex _lock;
 	vector<thread>	_threads;
