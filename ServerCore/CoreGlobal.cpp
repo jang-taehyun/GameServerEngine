@@ -6,6 +6,7 @@
 #include "SendBuffer.h"
 #include "GlobalQueue.h"
 #include "JobTimer.h"
+#include "DBConnectionPool.h"
 #include "CoreGlobal.h"
 
 CoreGlobal			GCoreGlobal;
@@ -15,6 +16,7 @@ Memory*				GMemory = nullptr;
 SendBufferManager*	GSendBufferManager = nullptr;
 GlobalQueue*		GGlobalQueue = nullptr;
 JobTimer*			GJobTimer = nullptr;
+DBConnectionPool*	GDBConnectionPool = nullptr;
 
 CoreGlobal::CoreGlobal()
 {
@@ -24,6 +26,7 @@ CoreGlobal::CoreGlobal()
 	GSendBufferManager = new SendBufferManager;
 	GGlobalQueue = new GlobalQueue;
 	GJobTimer = new JobTimer;
+	GDBConnectionPool = new DBConnectionPool;
 	SocketUtils::Init();
 }
 
@@ -35,5 +38,6 @@ CoreGlobal::~CoreGlobal()
 	delete GSendBufferManager;
 	delete GGlobalQueue;
 	delete GJobTimer;
+	delete GDBConnectionPool;
 	SocketUtils::Clear();
 }

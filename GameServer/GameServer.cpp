@@ -12,6 +12,7 @@
 #include "ClientPacketHandler.h"
 #include "Room.h"
 #include "Job.h"
+#include "DBConnectionPool.h"
 #include "Protocol.pb.h"
 
 enum
@@ -41,10 +42,77 @@ int main()
     GSessionManager = new GameSessionManager;
     GRoom = std::make_shared<Room>();
 
-    // 1000 단위 -> 1초
-    GRoom->DoTimer(1000, []() {std::cout << "hello 1000" << std::endl; });
-    GRoom->DoTimer(2000, []() {std::cout << "hello 2000" << std::endl; });
-    GRoom->DoTimer(3000, []() {std::cout << "hello 3000" << std::endl; });
+    {
+        ASSERT_CRASH(GDBConnectionPool->Connect(1, L"Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\MSSQLLocalDB;Database=ServerDB;Trusted_Connection=Yes;"));
+
+        // Create table
+        {
+            auto query = L"                                     \
+                DROP TABLE IF EXISTS [dbo].[Gold];              \
+                CREATE TABLE [dbo].[Gold]                       \
+                (                                               \
+                    [id] INT NOT NULL PRIMARY KEY IDENTITY,     \
+                    [gold] INT NULL                             \
+                );                                              \
+            ";
+
+            DBConnection* dbConn = GDBConnectionPool->Pop();
+            ASSERT_CRASH(dbConn->Execute(query));
+            GDBConnectionPool->Push(dbConn);
+        }
+
+        // Add data
+        for (int32 i = 0; i < 3; ++i)
+        {
+            DBConnection* dbConn = GDBConnectionPool->Pop();
+
+            // 기존에 바인딩된 정보 제거
+            dbConn->Unbind();
+
+            // 넘길 인자를 바인딩
+            int32 gold = 100;
+            SQLLEN len = 0;
+            ASSERT_CRASH(dbConn->BindParam(1, SQL_C_LONG, SQL_INTEGER, sizeof(gold), &gold, &len));
+
+            // SQL 실행
+            ASSERT_CRASH(dbConn->Execute(L"INSERT INTO [dbo].[Gold]([gold]) VALUES(?)"));
+
+            GDBConnectionPool->Push(dbConn);
+        }
+
+        // Read
+        {
+            DBConnection* dbConn = GDBConnectionPool->Pop();
+
+            // 기존에 바인딩된 정보 제거
+            dbConn->Unbind();
+
+            // 넘길 인자를 바인딩
+            int32 gold = 100;
+            SQLLEN len = 0;
+            ASSERT_CRASH(dbConn->BindParam(1, SQL_C_LONG, SQL_INTEGER, sizeof(gold), &gold, &len));
+
+            // 결과물을 받을 메모리 바인딩
+            int32 outId = 0;
+            SQLLEN outIdLen = 0;
+            int32 outGold = 0;
+            SQLLEN outGoldLen = 0;
+            ASSERT_CRASH(dbConn->BindCol(1, SQL_C_LONG, sizeof(outId), &outId, &outIdLen));
+            ASSERT_CRASH(dbConn->BindCol(2, SQL_C_LONG, sizeof(outGold), &outGold, &outGoldLen));
+
+            // SQL 실행
+            ASSERT_CRASH(dbConn->Execute(L"SELECT id, gold FROM [dbo].[Gold] WHERE gold = (?)"));
+
+            // 결과 가져오기
+            using namespace std;
+            while (dbConn->Fetch())
+            {
+                cout << "id : " << outId << "gold : " << outGold << endl;
+            }
+
+            GDBConnectionPool->Push(dbConn);
+        }
+    }
 
     ClientPacketHandler::Init();
 
