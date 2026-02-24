@@ -28,6 +28,9 @@ void DoWorkerJob(ServerServiceRef& service)
         // 네트워크 입출력 처리 -> 패킷 핸들러에 의해 인게임 로직까지 처리
         service->GetIOCPCore()->Dispatch(10);
 
+        // 예약된 job 처리(job timer에 있는 job들을 배분)
+        ThreadManager::DistributeReserveJobs();
+
         // global queue
         ThreadManager::DoGlobalQueueWork();
     }
@@ -37,6 +40,11 @@ int main()
 {
     GSessionManager = new GameSessionManager;
     GRoom = std::make_shared<Room>();
+
+    // 1000 단위 -> 1초
+    GRoom->DoTimer(1000, []() {std::cout << "hello 1000" << std::endl; });
+    GRoom->DoTimer(2000, []() {std::cout << "hello 2000" << std::endl; });
+    GRoom->DoTimer(3000, []() {std::cout << "hello 3000" << std::endl; });
 
     ClientPacketHandler::Init();
 

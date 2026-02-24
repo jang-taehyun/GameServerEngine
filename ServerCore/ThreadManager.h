@@ -32,6 +32,9 @@ public:
 	// global queue에 있는 job queue 실행 //
 	static void DoGlobalQueueWork();
 
+	// job timer에 예약된 job들을 실행 //
+	static void DistributeReserveJobs();
+
 private:
 	Mutex _lock;
 	vector<thread>	_threads;

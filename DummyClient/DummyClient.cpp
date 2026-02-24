@@ -65,7 +65,7 @@ int main()
             NetworkAddress(L"127.0.0.1", 7777),
             MakeShared<IOCPCore>(),
             MakeShared<ServerSession>,                // TODO: Session manager µî
-            100
+            1
         )
     };
 

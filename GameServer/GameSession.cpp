@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "GameSession.h"
 #include "GameSessionManager.h"
+#include "Room.h"
 #include "ClientPacketHandler.h"
 
 GameSession::~GameSession()
@@ -18,6 +19,16 @@ void GameSession::OnConnected()
 void GameSession::OnDisconnected()
 {
     GSessionManager->Remove(std::static_pointer_cast<GameSession>(shared_from_this()));
+
+    if (_currentPlayer)
+    {
+        auto room = _room.lock();
+        if (room)
+            room->DoAsync(&Room::Leave, _currentPlayer);
+    }
+
+    _currentPlayer = nullptr;
+    _players.clear();
 }
 
 void GameSession::OnRecvPacket(BYTE* buffer, int32 len)
