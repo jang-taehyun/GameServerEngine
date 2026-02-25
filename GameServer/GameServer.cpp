@@ -13,6 +13,7 @@
 #include "Room.h"
 #include "Job.h"
 #include "DBConnectionPool.h"
+#include "DBBind.h"
 #include "Protocol.pb.h"
 
 enum
@@ -52,7 +53,9 @@ int main()
                 CREATE TABLE [dbo].[Gold]                       \
                 (                                               \
                     [id] INT NOT NULL PRIMARY KEY IDENTITY,     \
-                    [gold] INT NULL                             \
+                    [gold] INT NULL,                            \
+                    [name] NVARCHAR(50) NULL,                   \
+                    [createDate] DATETIME NULL                  \
                 );                                              \
             ";
 
@@ -66,17 +69,49 @@ int main()
         {
             DBConnection* dbConn = GDBConnectionPool->Pop();
 
-            // 기존에 바인딩된 정보 제거
-            dbConn->Unbind();
+            {
+                // 기존에 바인딩된 정보 제거
+                //dbConn->Unbind();
 
-            // 넘길 인자를 바인딩
-            int32 gold = 100;
-            SQLLEN len = 0;
-            ASSERT_CRASH(dbConn->BindParam(1, SQL_C_LONG, SQL_INTEGER, sizeof(gold), &gold, &len));
+                //// 넘길 인자를 바인딩
+                //int32 gold = 100;
+                //SQLLEN len = 0;
 
-            // SQL 실행
-            // ?에 해당하는 부분에 인자가 들어감
-            ASSERT_CRASH(dbConn->Execute(L"INSERT INTO [dbo].[Gold]([gold]) VALUES(?)"));
+                //WCHAR name[100] = L"쿄쿄쿄";
+                //SQLLEN nameLen = 0;
+
+                //TIMESTAMP_STRUCT ts = { 0, };
+                //ts.year = 2025;
+                //ts.month = 2;
+                //ts.day = 25;
+                //SQLLEN tsLen = 0;
+
+                //ASSERT_CRASH(dbConn->BindParam(1, &gold, &len));
+                //ASSERT_CRASH(dbConn->BindParam(2, name, &nameLen));
+                //ASSERT_CRASH(dbConn->BindParam(3, &ts, &tsLen));
+
+                //// SQL 실행
+                //// ?에 해당하는 부분에 인자가 들어감
+                //ASSERT_CRASH(dbConn->Execute(L"INSERT INTO [dbo].[Gold]([gold], [name], [createDate]) VALUES(?, ? ,?)"));
+
+            }
+            
+            {
+                DBBind<3, 0> dbBind{ *dbConn, L"INSERT INTO [dbo].[Gold]([gold], [name], [createDate]) VALUES(?, ? ,?)" };
+
+                int32 gold = 100;
+                WCHAR name[100] = L"키키키";
+                TIMESTAMP_STRUCT ts = { 0, };
+                ts.year = 2025;
+                ts.month = 2;
+                ts.day = 26;
+
+                dbBind.BindParam(0, gold);
+                dbBind.BindParam(1, name);
+                dbBind.BindParam(2, ts);
+
+                ASSERT_CRASH(dbBind.Execute());
+            }
 
             GDBConnectionPool->Push(dbConn);
         }
@@ -85,31 +120,71 @@ int main()
         {
             DBConnection* dbConn = GDBConnectionPool->Pop();
 
-            // 기존에 바인딩된 정보 제거
-            dbConn->Unbind();
-
-            // 넘길 인자를 바인딩
             int32 gold = 100;
-            SQLLEN len = 0;
-            ASSERT_CRASH(dbConn->BindParam(1, SQL_C_LONG, SQL_INTEGER, sizeof(gold), &gold, &len));
 
-            // 결과물을 받을 메모리 바인딩
             int32 outId = 0;
-            SQLLEN outIdLen = 0;
             int32 outGold = 0;
-            SQLLEN outGoldLen = 0;
-            ASSERT_CRASH(dbConn->BindCol(1, SQL_C_LONG, sizeof(outId), &outId, &outIdLen));
-            ASSERT_CRASH(dbConn->BindCol(2, SQL_C_LONG, sizeof(outGold), &outGold, &outGoldLen));
+            WCHAR outName[100] = { 0, };
+            TIMESTAMP_STRUCT outDate = { 0, };
 
-            // SQL 실행
-            ASSERT_CRASH(dbConn->Execute(L"SELECT id, gold FROM [dbo].[Gold] WHERE gold = (?)"));
+            {
+                // 기존에 바인딩된 정보 제거
+                //dbConn->Unbind();
+
+                //// 넘길 인자를 바인딩
+                //int32 gold = 100;
+                //SQLLEN len = 0;
+                //ASSERT_CRASH(dbConn->BindParam(1, &gold, &len));
+
+                //// 결과물을 받을 메모리 바인딩
+                //int32 outId = 0;
+                //SQLLEN outIdLen = 0;
+
+                //int32 outGold = 0;
+                //SQLLEN outGoldLen = 0;
+
+                //WCHAR outName[100] = { 0, };
+                //SQLLEN outNameLen = 0;
+
+                //TIMESTAMP_STRUCT outDate;
+                //SQLLEN outDateLen = 0;
+
+                //ASSERT_CRASH(dbConn->BindCol(1, &outId, &outIdLen));
+                //ASSERT_CRASH(dbConn->BindCol(2, &outGold, &outGoldLen));
+                //ASSERT_CRASH(dbConn->BindCol(3, outName, len32(outName), &outNameLen));
+                //ASSERT_CRASH(dbConn->BindCol(4, &outDate, &outDateLen));
+
+                //// SQL 실행
+                //ASSERT_CRASH(dbConn->Execute(L"SELECT id, gold, name, createDate FROM [dbo].[Gold] WHERE gold = (?)"));
+
+            }
+
+            {
+                DBBind<1, 4> dbBind{ *dbConn, L"SELECT id, gold, name, createDate FROM [dbo].[Gold] WHERE gold = (?)" };
+                
+                dbBind.BindParam(0, gold);
+
+                dbBind.BindCol(0, OUT outId);
+                dbBind.BindCol(1, OUT outGold);
+                dbBind.BindCol(2, OUT outName);
+                dbBind.BindCol(3, OUT outDate);
+
+                ASSERT_CRASH(dbBind.Execute());
+            }
+            
 
             // 결과 가져오기
-            using namespace std;
-            while (dbConn->Fetch())
             {
-                cout << "id : " << outId << ", gold : " << outGold << endl;
+                using namespace std;
+
+                wcout.imbue(locale("kor"));
+                while (dbConn->Fetch())
+                {
+                    wcout << L"id : " << outId << L", gold : " << outGold << L", name : " << outName << endl;
+                    wcout << L"Data : " << outDate.year << L"/" << outDate.month << L"/" << outDate.day << endl;
+                }
             }
+            
 
             GDBConnectionPool->Push(dbConn);
         }

@@ -8,31 +8,54 @@
 	 DB Connection
 ---------------------*/
 
+
+enum
+{
+	WVARCHAR_MAX = 4000,
+	BINARY_MAX = 8000,
+};
+
 class DBConnection
 {
 public:
 	bool Connect(SQLHENV henv, const WCHAR* connectionString);
 	void Clear();
 
-	bool Execute(const WCHAR* query);			// SQL 쿼리 실행
-	bool Fetch();								// 쿼리 결과 받아오는 함수
-	int32 GetRowCount();						// 데이터의 개수
-	void Unbind();								// 바인딩한 인자들을 제거하는 함수
+	bool Execute(const WCHAR* query);
+	bool Fetch();
+	int32 GetRowCount();
+	void Unbind();
 
 public:
+	bool BindParam(int32 paramIndex, bool* value, SQLLEN* index);
+	bool BindParam(int32 paramIndex, float* value, SQLLEN* index);
+	bool BindParam(int32 paramIndex, double* value, SQLLEN* index);
+	bool BindParam(int32 paramIndex, int8* value, SQLLEN* index);
+	bool BindParam(int32 paramIndex, int16* value, SQLLEN* index);
+	bool BindParam(int32 paramIndex, int32* value, SQLLEN* index);
+	bool BindParam(int32 paramIndex, int64* value, SQLLEN* index);
+	bool BindParam(int32 paramIndex, TIMESTAMP_STRUCT* value, SQLLEN* index);
+	bool BindParam(int32 paramIndex, const WCHAR* str, SQLLEN* index);
+	bool BindParam(int32 paramIndex, const BYTE* bin, int32 size, SQLLEN* index);
 
-	// SQL 쿼리에 넘길 인자들을 바인딩
-	// paramIndex : 넘겨준 인자의 index 번호(인자가 여러 개 있을 수 있기 때문에 사용)
-	// cType : 넘겨준 인자의 데이터 형식(자료형)
-	// sqlType : SQL에 사용할 데이터 형식(자료형)
+	bool BindCol(int32 columnIndex, bool* value, SQLLEN* index);
+	bool BindCol(int32 columnIndex, float* value, SQLLEN* index);
+	bool BindCol(int32 columnIndex, double* value, SQLLEN* index);
+	bool BindCol(int32 columnIndex, int8* value, SQLLEN* index);
+	bool BindCol(int32 columnIndex, int16* value, SQLLEN* index);
+	bool BindCol(int32 columnIndex, int32* value, SQLLEN* index);
+	bool BindCol(int32 columnIndex, int64* value, SQLLEN* index);
+	bool BindCol(int32 columnIndex, TIMESTAMP_STRUCT* value, SQLLEN* index);
+	bool BindCol(int32 columnIndex, WCHAR* str, int32 size, SQLLEN* index);
+	bool BindCol(int32 columnIndex, BYTE* bin, int32 size, SQLLEN* index);
+
+private:
 	bool BindParam(SQLUSMALLINT paramIndex, SQLSMALLINT cType, SQLSMALLINT sqlType, SQLULEN len, SQLPOINTER ptr, SQLLEN* index);
-	
-	// 쿼리 결과를 받아올 때, 결과를 받을 메모리 주소와 바인딩하는 함수
 	bool BindCol(SQLUSMALLINT columnIndex, SQLSMALLINT cType, SQLULEN len, SQLPOINTER value, SQLLEN* index);
 	void HandleError(SQLRETURN ret, SQLSMALLINT handleType, SQLHANDLE handle);
 
 private:
-	SQLHDBC _connection = SQL_NULL_HANDLE;		// DB 연결
-	SQLHSTMT _statement = SQL_NULL_HANDLE;		// 연결 상태 관리
+	SQLHDBC _connection = SQL_NULL_HANDLE;
+	SQLHSTMT _statement = SQL_NULL_HANDLE;
 };
 
