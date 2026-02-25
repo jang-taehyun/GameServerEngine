@@ -218,6 +218,7 @@
     <None Include="..\Common\ProtoBuf\GenPackets.bat" />
     <None Include="..\Common\ProtoBuf\Protocol.proto" />
     <None Include="..\Common\ProtoBuf\Struct.proto" />
+    <None Include="DB_01.sql" />
   </ItemGroup>
   <ItemGroup>
     <UpToDateCheckInput Include="..\Common\ProtoBuf\Enum.proto" />

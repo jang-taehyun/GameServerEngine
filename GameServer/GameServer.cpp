@@ -70,33 +70,6 @@ int main()
             DBConnection* dbConn = GDBConnectionPool->Pop();
 
             {
-                // 기존에 바인딩된 정보 제거
-                //dbConn->Unbind();
-
-                //// 넘길 인자를 바인딩
-                //int32 gold = 100;
-                //SQLLEN len = 0;
-
-                //WCHAR name[100] = L"쿄쿄쿄";
-                //SQLLEN nameLen = 0;
-
-                //TIMESTAMP_STRUCT ts = { 0, };
-                //ts.year = 2025;
-                //ts.month = 2;
-                //ts.day = 25;
-                //SQLLEN tsLen = 0;
-
-                //ASSERT_CRASH(dbConn->BindParam(1, &gold, &len));
-                //ASSERT_CRASH(dbConn->BindParam(2, name, &nameLen));
-                //ASSERT_CRASH(dbConn->BindParam(3, &ts, &tsLen));
-
-                //// SQL 실행
-                //// ?에 해당하는 부분에 인자가 들어감
-                //ASSERT_CRASH(dbConn->Execute(L"INSERT INTO [dbo].[Gold]([gold], [name], [createDate]) VALUES(?, ? ,?)"));
-
-            }
-            
-            {
                 DBBind<3, 0> dbBind{ *dbConn, L"INSERT INTO [dbo].[Gold]([gold], [name], [createDate]) VALUES(?, ? ,?)" };
 
                 int32 gold = 100;
@@ -126,38 +99,6 @@ int main()
             int32 outGold = 0;
             WCHAR outName[100] = { 0, };
             TIMESTAMP_STRUCT outDate = { 0, };
-
-            {
-                // 기존에 바인딩된 정보 제거
-                //dbConn->Unbind();
-
-                //// 넘길 인자를 바인딩
-                //int32 gold = 100;
-                //SQLLEN len = 0;
-                //ASSERT_CRASH(dbConn->BindParam(1, &gold, &len));
-
-                //// 결과물을 받을 메모리 바인딩
-                //int32 outId = 0;
-                //SQLLEN outIdLen = 0;
-
-                //int32 outGold = 0;
-                //SQLLEN outGoldLen = 0;
-
-                //WCHAR outName[100] = { 0, };
-                //SQLLEN outNameLen = 0;
-
-                //TIMESTAMP_STRUCT outDate;
-                //SQLLEN outDateLen = 0;
-
-                //ASSERT_CRASH(dbConn->BindCol(1, &outId, &outIdLen));
-                //ASSERT_CRASH(dbConn->BindCol(2, &outGold, &outGoldLen));
-                //ASSERT_CRASH(dbConn->BindCol(3, outName, len32(outName), &outNameLen));
-                //ASSERT_CRASH(dbConn->BindCol(4, &outDate, &outDateLen));
-
-                //// SQL 실행
-                //ASSERT_CRASH(dbConn->Execute(L"SELECT id, gold, name, createDate FROM [dbo].[Gold] WHERE gold = (?)"));
-
-            }
 
             {
                 DBBind<1, 4> dbBind{ *dbConn, L"SELECT id, gold, name, createDate FROM [dbo].[Gold] WHERE gold = (?)" };
