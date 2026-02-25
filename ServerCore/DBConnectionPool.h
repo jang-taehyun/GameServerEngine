@@ -21,7 +21,7 @@ public:
 
 private:
 	USE_LOCK;
-	SQLHENV _environment = SQL_NULL_HANDLE;
+	SQLHENV _environment = SQL_NULL_HANDLE;		// environment을 담당하는 handle
 	Vector<DBConnection*> _connections;
 };
 

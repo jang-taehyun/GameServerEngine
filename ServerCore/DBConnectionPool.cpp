@@ -19,12 +19,15 @@ bool DBConnectionPool::Connect(int32 connectionCount, const WCHAR* connectionStr
 {
 	WRITE_LOCK;
 
+	// environment 할당
 	if (SQL_SUCCESS != ::SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &_environment))
 		return false;
 
+	// ODBC 버전 설정
 	if (SQL_SUCCESS != ::SQLSetEnvAttr(_environment, SQL_ATTR_ODBC_VERSION, reinterpret_cast<SQLPOINTER>(SQL_OV_ODBC3), 0))
 		return false;
 
+	// DB 연결
 	for (int32 i = 0; i < connectionCount; ++i)
 	{
 		DBConnection* connection = xnew<DBConnection>();

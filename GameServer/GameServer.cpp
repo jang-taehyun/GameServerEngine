@@ -75,6 +75,7 @@ int main()
             ASSERT_CRASH(dbConn->BindParam(1, SQL_C_LONG, SQL_INTEGER, sizeof(gold), &gold, &len));
 
             // SQL 실행
+            // ?에 해당하는 부분에 인자가 들어감
             ASSERT_CRASH(dbConn->Execute(L"INSERT INTO [dbo].[Gold]([gold]) VALUES(?)"));
 
             GDBConnectionPool->Push(dbConn);
@@ -107,7 +108,7 @@ int main()
             using namespace std;
             while (dbConn->Fetch())
             {
-                cout << "id : " << outId << "gold : " << outGold << endl;
+                cout << "id : " << outId << ", gold : " << outGold << endl;
             }
 
             GDBConnectionPool->Push(dbConn);

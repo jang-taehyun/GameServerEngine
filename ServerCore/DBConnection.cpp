@@ -18,6 +18,7 @@ bool DBConnection::Connect(SQLHENV henv, const WCHAR* connectionString)
 	WCHAR resultString[MAX_PATH] = { 0, };
 	SQLSMALLINT resultStringLen = 0;
 
+	// DB connect
 	SQLRETURN ret = ::SQLDriverConnectW(
 		_connection,
 		NULL,
@@ -61,12 +62,15 @@ void DBConnection::Clear()
 
 bool DBConnection::Execute(const WCHAR* query)
 {
+	// statement를 이용해 SQL 쿼리 실행
 	SQLRETURN ret = ::SQLExecDirectW(_statement, (SQLWCHAR*)query, SQL_NTSL);
-	if (SQL_SUCCESS == ret || SQL_SUCCESS_WITH_INFO == ret)
-		return true;
+	if (SQL_SUCCESS != ret && SQL_SUCCESS_WITH_INFO != ret)
+	{
+		HandleError(ret, SQL_HANDLE_STMT, _statement);
+		return false;
+	}
 
-	HandleError(ret, SQL_HANDLE_STMT, _statement);
-	return false;
+	return true;
 }
 
 bool DBConnection::Fetch()
@@ -78,11 +82,15 @@ bool DBConnection::Fetch()
 	case SQL_SUCCESS:
 	case SQL_SUCCESS_WITH_INFO:
 		return true;
+
+	// 데이터 없음
 	case SQL_NO_DATA:
 		return false;
+
 	case SQL_ERROR:
 		HandleError(ret, SQL_HANDLE_STMT, _statement);
 		return false;
+
 	default:
 		return true;
 	}
