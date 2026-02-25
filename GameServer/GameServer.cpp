@@ -14,6 +14,7 @@
 #include "Job.h"
 #include "DBConnectionPool.h"
 #include "DBBind.h"
+#include "XMLParser.h"
 #include "Protocol.pb.h"
 
 enum
@@ -44,91 +45,64 @@ int main()
     GRoom = std::make_shared<Room>();
 
     {
+		// XML 파일 파싱
+		XMLNode root;
+		XMLParser parser;
+		if (parser.ParseFromFile(L"GameDB.xml", OUT root) == false)
+			return 0;
+
+		// 파싱한 데이터를 통해 table 추출
+		Vector<XMLNode> tables = root.FindChildren(L"Table");
+		for (XMLNode& table : tables)
+		{
+			WString name = table.GetStringAttr(L"name");
+			WString desc = table.GetStringAttr(L"desc");
+
+			Vector<XMLNode> columns = table.FindChildren(L"Column");
+			for (XMLNode& column : columns)
+			{
+				WString colName = column.GetStringAttr(L"name");
+				WString colType = column.GetStringAttr(L"type");
+				bool nullable = !column.GetBoolAttr(L"notnull", false);
+				WString identity = column.GetStringAttr(L"identity");
+				WString colDefault = column.GetStringAttr(L"default");
+				// Etc...
+			}
+
+			Vector<XMLNode> indices = table.FindChildren(L"Index");
+			for (XMLNode& index : indices)
+			{
+				WString indexType = index.GetStringAttr(L"type");
+				bool primaryKey = index.FindChild(L"PrimaryKey").IsValid();
+				bool uniqueConstraint = index.FindChild(L"UniqueKey").IsValid();
+
+				Vector<XMLNode> columns = index.FindChildren(L"Column");
+				for (XMLNode& column : columns)
+				{
+					WString colName = column.GetStringAttr(L"name");
+				}
+			}
+		}
+
+		// 파싱한 데이터를 통해 stored procedure 추출
+		Vector<XMLNode> procedures = root.FindChildren(L"Procedure");
+		for (XMLNode& procedure : procedures)
+		{
+			WString name = procedure.GetStringAttr(L"name");
+			WString body = procedure.FindChild(L"Body").GetStringValue();
+
+			Vector<XMLNode> params = procedure.FindChildren(L"Param");
+			for (XMLNode& param : params)
+			{
+				WString paramName = param.GetStringAttr(L"name");
+				WString paramType = param.GetStringAttr(L"type");
+				// TODO..
+			}
+		}
+
         ASSERT_CRASH(GDBConnectionPool->Connect(1, L"Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\MSSQLLocalDB;Database=ServerDB;Trusted_Connection=Yes;"));
 
-        // Create table
-        {
-            auto query = L"                                     \
-                DROP TABLE IF EXISTS [dbo].[Gold];              \
-                CREATE TABLE [dbo].[Gold]                       \
-                (                                               \
-                    [id] INT NOT NULL PRIMARY KEY IDENTITY,     \
-                    [gold] INT NULL,                            \
-                    [name] NVARCHAR(50) NULL,                   \
-                    [createDate] DATETIME NULL                  \
-                );                                              \
-            ";
 
-            DBConnection* dbConn = GDBConnectionPool->Pop();
-            ASSERT_CRASH(dbConn->Execute(query));
-            GDBConnectionPool->Push(dbConn);
-        }
-
-        // Add data
-        for (int32 i = 0; i < 3; ++i)
-        {
-            DBConnection* dbConn = GDBConnectionPool->Pop();
-
-            {
-                DBBind<3, 0> dbBind{ *dbConn, L"INSERT INTO [dbo].[Gold]([gold], [name], [createDate]) VALUES(?, ? ,?)" };
-
-                int32 gold = 100;
-                WCHAR name[100] = L"키키키";
-                TIMESTAMP_STRUCT ts = { 0, };
-                ts.year = 2025;
-                ts.month = 2;
-                ts.day = 26;
-
-                dbBind.BindParam(0, gold);
-                dbBind.BindParam(1, name);
-                dbBind.BindParam(2, ts);
-
-                ASSERT_CRASH(dbBind.Execute());
-            }
-
-            GDBConnectionPool->Push(dbConn);
-        }
-
-        // Read
-        {
-            DBConnection* dbConn = GDBConnectionPool->Pop();
-
-            int32 gold = 100;
-
-            int32 outId = 0;
-            int32 outGold = 0;
-            WCHAR outName[100] = { 0, };
-            TIMESTAMP_STRUCT outDate = { 0, };
-
-            {
-                DBBind<1, 4> dbBind{ *dbConn, L"SELECT id, gold, name, createDate FROM [dbo].[Gold] WHERE gold = (?)" };
-                
-                dbBind.BindParam(0, gold);
-
-                dbBind.BindCol(0, OUT outId);
-                dbBind.BindCol(1, OUT outGold);
-                dbBind.BindCol(2, OUT outName);
-                dbBind.BindCol(3, OUT outDate);
-
-                ASSERT_CRASH(dbBind.Execute());
-            }
-            
-
-            // 결과 가져오기
-            {
-                using namespace std;
-
-                wcout.imbue(locale("kor"));
-                while (dbConn->Fetch())
-                {
-                    wcout << L"id : " << outId << L", gold : " << outGold << L", name : " << outName << endl;
-                    wcout << L"Data : " << outDate.year << L"/" << outDate.month << L"/" << outDate.day << endl;
-                }
-            }
-            
-
-            GDBConnectionPool->Push(dbConn);
-        }
     }
 
     ClientPacketHandler::Init();

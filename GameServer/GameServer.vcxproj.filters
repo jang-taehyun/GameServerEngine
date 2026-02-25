@@ -91,8 +91,11 @@
     <None Include="..\Common\ProtoBuf\GenPackets.bat">
       <Filter>Protocol</Filter>
     </None>
-    <None Include="DB_01.sql">
+    <None Include="DB_01.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <Xml Include="GameDB.xml">
       <Filter>Main\DB</Filter>
-    </None>
+    </Xml>
   </ItemGroup>
 </Project>

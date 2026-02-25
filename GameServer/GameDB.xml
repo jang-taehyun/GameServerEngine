@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- XML 파일을 버전 관리하는 방식 -->
+<!-- DB 원본 설계는 XML 파일로 하고, 직접 만든 ORM을 이용해 XML 파일을 파싱 -->
+
+<!-- attribute : name="id" type="int" notnull="true" desc="골드 테이블" -->
+<!-- value : <Column>123<Column/>에서 123이 value -->
+
+<!-- desc는 주석같은 느낌, 추가적인 정보를 기입할 때 사용 -->
+
+
+<!-- 현재 구조에서 GameDB가 root가 되고, 나머지는 child가 된다. -->
+
+<GameDB>
+	
+	<!-- table 정의 -->
+	<Table name="Gold">
+		<Column name="id" type="int" notnull="true" desc="골드 테이블" />
+		<Column name="gold" type="int" notnull="false" />
+		<Column name="name" type="nvarchar(50)" notnull="false" />
+		<Column name="createDate" type="datetime" notnull="false" />
+		
+		<!-- index 정의 -->
+		<index type="clustered">
+			<PrimaryKey/>
+			<Column name="id"/>
+		</index>
+		
+	</Table>
+
+	<!-- stored procedure -->
+	<!-- CDATA 안에 있는 내용은 하나의 데이터로 인식 -->
+	<!-- 일일이 query를 날리는 방식이 아니라, stored procedure를 호출하는 방식으로 사용 -->
+	<Procedure name="spInsertGold">
+		<Param name="@gold" type="int" />
+		<Param name="@name" type="nvarchar(50)" />
+		<Param name="@createDate" type="datetime" />
+		<Body>
+			<![CDATA[
+			INSERT INTO [dbo].[Gold]([gold], [name], [createDate]) VALUES(@gold, @name ,@createDate);
+			]]>
+		</Body>
+	</Procedure>
+
+	<!-- stored procedure -->
+	<Procedure name="spGetGold">
+		<Param name="@gold" type="int" />
+		<Body>
+			<![CDATA[
+			SELECT id, gold, name, createDate FROM [dbo].[Gold] WHERE gold = (@gold)
+			]]>
+		</Body>
+	</Procedure>
+	
+</GameDB>
