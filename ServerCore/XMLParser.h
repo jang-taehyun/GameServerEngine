@@ -54,5 +54,5 @@ public:
 
 private:
 	std::shared_ptr<XMLDocumentType>		_document = nullptr;
-	WString									_data;
+	String									_data;
 };

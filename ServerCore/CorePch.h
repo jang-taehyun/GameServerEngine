@@ -22,3 +22,4 @@
 #include "SendBuffer.h"
 #include "Session.h"
 #include "LockQueue.h"
+#include "ConsoleLog.h"

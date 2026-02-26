@@ -70,5 +70,6 @@ template<typename Type, typename Hasher = std::hash<Type>, typename KeyEq = std:
 using HashSet = unordered_set<Type, Hasher, KeyEq, STLAllocator<Type>>;
 
 
-using String = basic_string<char, std::char_traits<char>, STLAllocator<char>>;
-using WString = basic_string<wchar_t, std::char_traits<wchar_t>, STLAllocator<wchar_t>>;
+// using String = basic_string<char, std::char_traits<char>, STLAllocator<char>>;
+// using WString = basic_string<wchar_t, std::char_traits<wchar_t>, STLAllocator<wchar_t>>;
+using String = basic_string<wchar_t, std::char_traits<wchar_t>, STLAllocator<wchar_t>>;

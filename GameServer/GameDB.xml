@@ -14,17 +14,17 @@
 <GameDB>
 	
 	<!-- table 정의 -->
-	<Table name="Gold">
-		<Column name="id" type="int" notnull="true" desc="골드 테이블" />
+	<Table name="Gold" desc="골드 테이블">
+		<Column name="id" type="int" notnull="true" identity="1,1"/>
 		<Column name="gold" type="int" notnull="false" />
 		<Column name="name" type="nvarchar(50)" notnull="false" />
 		<Column name="createDate" type="datetime" notnull="false" />
 		
 		<!-- index 정의 -->
-		<index type="clustered">
+		<Index type="clustered">
 			<PrimaryKey/>
 			<Column name="id"/>
-		</index>
+		</Index>
 		
 	</Table>
 

@@ -2,6 +2,15 @@
 
 #include "Types.h"
 
+
+/*----------------
+	 namespace
+----------------*/
+
+#define NAMESPACE_BEGIN(name)	namespace name {
+#define NAMESPACE_END			}
+
+
 /*------------
 	 Lock
 ------------*/

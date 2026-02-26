@@ -25,11 +25,11 @@ Vector<BYTE> FileUtils::ReadFile(const WCHAR* path)
 	return ret;
 }
 
-WString FileUtils::Convert(std::string str)
+String FileUtils::Convert(std::string str)
 {
 	const int32 srcLen = static_cast<int32>(str.size());
 
-	WString ret;
+	String ret;
 	if (srcLen == 0)
 		return ret;
 

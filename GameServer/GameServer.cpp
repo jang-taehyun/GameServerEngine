@@ -15,6 +15,7 @@
 #include "DBConnectionPool.h"
 #include "DBBind.h"
 #include "XMLParser.h"
+#include "DBSynchronizer.h"
 #include "Protocol.pb.h"
 
 enum
@@ -45,64 +46,11 @@ int main()
     GRoom = std::make_shared<Room>();
 
     {
-		// XML 파일 파싱
-		XMLNode root;
-		XMLParser parser;
-		if (parser.ParseFromFile(L"GameDB.xml", OUT root) == false)
-			return 0;
-
-		// 파싱한 데이터를 통해 table 추출
-		Vector<XMLNode> tables = root.FindChildren(L"Table");
-		for (XMLNode& table : tables)
-		{
-			WString name = table.GetStringAttr(L"name");
-			WString desc = table.GetStringAttr(L"desc");
-
-			Vector<XMLNode> columns = table.FindChildren(L"Column");
-			for (XMLNode& column : columns)
-			{
-				WString colName = column.GetStringAttr(L"name");
-				WString colType = column.GetStringAttr(L"type");
-				bool nullable = !column.GetBoolAttr(L"notnull", false);
-				WString identity = column.GetStringAttr(L"identity");
-				WString colDefault = column.GetStringAttr(L"default");
-				// Etc...
-			}
-
-			Vector<XMLNode> indices = table.FindChildren(L"Index");
-			for (XMLNode& index : indices)
-			{
-				WString indexType = index.GetStringAttr(L"type");
-				bool primaryKey = index.FindChild(L"PrimaryKey").IsValid();
-				bool uniqueConstraint = index.FindChild(L"UniqueKey").IsValid();
-
-				Vector<XMLNode> columns = index.FindChildren(L"Column");
-				for (XMLNode& column : columns)
-				{
-					WString colName = column.GetStringAttr(L"name");
-				}
-			}
-		}
-
-		// 파싱한 데이터를 통해 stored procedure 추출
-		Vector<XMLNode> procedures = root.FindChildren(L"Procedure");
-		for (XMLNode& procedure : procedures)
-		{
-			WString name = procedure.GetStringAttr(L"name");
-			WString body = procedure.FindChild(L"Body").GetStringValue();
-
-			Vector<XMLNode> params = procedure.FindChildren(L"Param");
-			for (XMLNode& param : params)
-			{
-				WString paramName = param.GetStringAttr(L"name");
-				WString paramType = param.GetStringAttr(L"type");
-				// TODO..
-			}
-		}
-
         ASSERT_CRASH(GDBConnectionPool->Connect(1, L"Driver={ODBC Driver 17 for SQL Server};Server=(localdb)\\MSSQLLocalDB;Database=ServerDB;Trusted_Connection=Yes;"));
 
-
+        DBConnection* dbConn = GDBConnectionPool->Pop();
+        DBSynchronizer dbSync{ *dbConn };
+        dbSync.Synchronize(L"GameDB.xml");
     }
 
     ClientPacketHandler::Init();

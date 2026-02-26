@@ -122,7 +122,7 @@ protected:
 	DBConnection& _dbConnection;
 	const WCHAR* _query;
 	SQLLEN _paramIndex[(ParamCount > 0 ? ParamCount : 1)] = { 0, };
-	SQLLEN _columnIndex[(ParamCount > 0 ? ParamCount : 1)] = { 0, };
+	SQLLEN _columnIndex[(ColumnCount > 0 ? ColumnCount : 1)] = { 0, };
 	uint64 _paramFlag = 0;
 	uint64 _columnFlag = 0;
 };
