@@ -11,6 +11,7 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DummyClient", "DummyClient\DummyClient.vcxproj", "{309C8B22-8A1B-4436-901C-4957FC83D3CB}"
 	ProjectSection(ProjectDependencies) = postProject
 		{16836B11-B441-402F-9006-EA558943765B} = {16836B11-B441-402F-9006-EA558943765B}
+		{60D83B85-473A-4B31-9163-728894335FA0} = {60D83B85-473A-4B31-9163-728894335FA0}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServerCore", "ServerCore\ServerCore.vcxproj", "{16836B11-B441-402F-9006-EA558943765B}"
@@ -18,6 +19,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
 Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "PacketGenerator", "Tools\PacketGenerator\PacketGenerator.pyproj", "{1747E794-236C-44EF-A6A9-4212D0959648}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "ProcedureGenerator", "Tools\ProcedureGenerator\ProcedureGenerator.pyproj", "{6A3CF4E9-4EC2-4B11-AA92-7D6B8BCE5502}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,12 +74,19 @@ Global
 		{1747E794-236C-44EF-A6A9-4212D0959648}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1747E794-236C-44EF-A6A9-4212D0959648}.Release|x64.ActiveCfg = Release|Any CPU
 		{1747E794-236C-44EF-A6A9-4212D0959648}.Release|x86.ActiveCfg = Release|Any CPU
+		{6A3CF4E9-4EC2-4B11-AA92-7D6B8BCE5502}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A3CF4E9-4EC2-4B11-AA92-7D6B8BCE5502}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6A3CF4E9-4EC2-4B11-AA92-7D6B8BCE5502}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6A3CF4E9-4EC2-4B11-AA92-7D6B8BCE5502}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A3CF4E9-4EC2-4B11-AA92-7D6B8BCE5502}.Release|x64.ActiveCfg = Release|Any CPU
+		{6A3CF4E9-4EC2-4B11-AA92-7D6B8BCE5502}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1747E794-236C-44EF-A6A9-4212D0959648} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{6A3CF4E9-4EC2-4B11-AA92-7D6B8BCE5502} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F9E72E40-8012-47C6-8C38-CF442538EAB8}
